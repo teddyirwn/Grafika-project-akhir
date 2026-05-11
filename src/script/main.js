@@ -7,34 +7,29 @@ import { Sprite } from "../class/Sprite";
 const canvas = document.getElementById("arena");
 const ctx = canvas.getContext("2d");
 
-// Inisialisasi Audio
+// --- INISIALISASI DOM (SCENE MANAGER) ---
+const startScene = document.getElementById("start-scene");
+const battleScene = document.getElementById("battle-scene");
+const startBtn = document.getElementById("start-btn");
+
+// --- INISIALISASI AUDIO ---
+const menuMusic = new Audio("/asset/audio/bgm/bgm_menu.wav");
 const backgroundMusic = new Audio("/asset/audio/bgm/bgm_fight.wav");
 const jumpSound = new Audio("/asset/audio/sfx/movement/sfx_jump.wav");
 const landSound = new Audio("/asset/audio/sfx/movement/sfx_landing.wav");
 const walkSound = new Audio("/asset/audio/sfx/movement/sfx_walking_grass.wav");
 
-const skill1Sound1 = new Audio(
-  "/asset/audio/sfx/combat/weapon/sfx_player1_skill1.wav",
-);
-const skill2Sound1 = new Audio(
-  "/asset/audio/sfx/combat/weapon/sfx_player1_skill2.wav",
-);
-const skill1Sound2 = new Audio(
-  "/asset/audio/sfx/combat/weapon/sfx_player2_skill1.wav",
-);
-const skill2Sound2 = new Audio(
-  "/asset/audio/sfx/combat/weapon/sfx_player2_skill2.wav",
-);
+const skill1Sound1 = new Audio("/asset/audio/sfx/combat/weapon/sfx_player1_skill1.wav");
+const skill2Sound1 = new Audio("/asset/audio/sfx/combat/weapon/sfx_player1_skill2.wav");
+const skill1Sound2 = new Audio("/asset/audio/sfx/combat/weapon/sfx_player2_skill1.wav");
+const skill2Sound2 = new Audio("/asset/audio/sfx/combat/weapon/sfx_player2_skill2.wav");
 
-// Atur volume audio
-backgroundMusic.volume = 0.3;
-jumpSound.volume = 1;
-landSound.volume = 1;
-walkSound.volume = 1;
-skill1Sound1.volume = 1;
-skill2Sound1.volume = 1;
-skill1Sound2.volume = 1;
-skill2Sound2.volume = 1;
+// Pengaturan Audio
+menuMusic.volume = 0.2;
+menuMusic.loop = true;
+backgroundMusic.volume = 0.2;
+backgroundMusic.loop = true;
+walkSound.loop = true; // Supaya jalan terus saat tombol ditahan
 
 let player1InAir = false;
 let player2InAir = false;
@@ -45,13 +40,14 @@ canvas.height = CONFIG.canvasHeight;
 let lastKeyP1 = "";
 let lastKeyP2 = "";
 
+// --- OBJECTS ---
 const background = new Sprite({
   position: { x: 0, y: 0 },
   imageSrc: "/asset/backgrounds/game_background_2/game_background_2.png",
 });
-// player 1
+
 const player1 = new Fighter({
-  position: { x: 100, y: 0 },
+  position: { x: 50, y: 0 },
   velocity: { x: 0, y: 0 },
   color: "blue",
   imageSrc: "/asset/characters/Samurai/Idle.png",
@@ -61,15 +57,12 @@ const player1 = new Fighter({
     idle: { imageSrc: "/asset/characters/Samurai/Idle.png", framesMax: 6 },
     run: { imageSrc: "/asset/characters/Samurai/Run.png", framesMax: 8 },
     jump: { imageSrc: "/asset/characters/Samurai/Jump.png", framesMax: 12 },
-    attack: {
-      imageSrc: "/asset/characters/Samurai/Attack_1.png",
-      framesMax: 6,
-    },
+    attack: { imageSrc: "/asset/characters/Samurai/Attack_1.png", framesMax: 6 },
   },
 });
 
 const player2 = new Fighter({
-  position: { x: 300, y: 0 },
+  position: { x: 500, y: 0 },
   velocity: { x: 0, y: 0 },
   color: "blue",
   imageSrc: "/asset/characters/Shinobi/Idle.png",
@@ -79,18 +72,22 @@ const player2 = new Fighter({
     idle: { imageSrc: "/asset/characters/Shinobi/Idle.png", framesMax: 6 },
     run: { imageSrc: "/asset/characters/Shinobi/Run.png", framesMax: 8 },
     jump: { imageSrc: "/asset/characters/Shinobi/Jump.png", framesMax: 12 },
-    attack: {
-      imageSrc: "/asset/characters/Shinobi/Attack_1.png",
-      framesMax: 5,
-    },
+    attack: { imageSrc: "/asset/characters/Shinobi/Attack_1.png", framesMax: 5 },
   },
 });
 
+const keys = {
+  a: { pressed: false },
+  d: { pressed: false },
+  l: { pressed: false },
+  j: { pressed: false },
+};
+
+// --- LOGIKA ANIMASI ---
 function animate() {
   window.requestAnimationFrame(animate);
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = "white";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
   background.update(ctx);
   player1.update(ctx, canvas.height);
   player2.update(ctx, canvas.height);
@@ -113,7 +110,7 @@ function animate() {
   player2.velocity.x = 0;
   if (keys.l.pressed && lastKeyP2 === "l") {
     player2.velocity.x = 5;
-    player2.facing = "right"; // Biasanya player 2 hadap kanan dulu
+    player2.facing = "right";
     player2.switchSprite("run");
   } else if (keys.j.pressed && lastKeyP2 === "j") {
     player2.velocity.x = -5;
@@ -123,67 +120,69 @@ function animate() {
     player2.switchSprite("idle");
   }
 
-  // Logika Animasi Lompat (Jika sedang naik/turun)
+  // Logika Animasi Lompat
   if (player1.velocity.y < 0) player1.switchSprite("jump");
   if (player2.velocity.y < 0) player2.switchSprite("jump");
 
-  // bgm dimulai saat player landing pertama kali
-  if (
-    (player1.velocity.y === 0 && player1InAir) ||
-    (player2.velocity.y === 0 && player2InAir)
-  ) {
-    backgroundMusic.currentTime = 0;
-    backgroundMusic.play();
-  }
-
-  //Logika Suara Landing
-  if (player1.velocity.y !== 0) {
-    player1InAir = true;
-  }
-
+  // Logika Suara Landing Player 1
+  if (player1.velocity.y !== 0) player1InAir = true;
   if (player1InAir && player1.velocity.y === 0) {
     landSound.currentTime = 0;
     landSound.play();
-    player1InAir = false; // Reset status agar tidak bunyi terus saat diam
+    player1InAir = false;
   }
 
-  if (player2.velocity.y !== 0) {
-    player2InAir = true;
-  }
-
+  // Logika Suara Landing Player 2
+  if (player2.velocity.y !== 0) player2InAir = true;
   if (player2InAir && player2.velocity.y === 0) {
     landSound.currentTime = 0;
     landSound.play();
-    player2InAir = false; // Reset status agar tidak bunyi terus saat diam
+    player2InAir = false;
+  }
+
+  // Logika Walk Sound (Hanya bunyi jika di tanah dan menekan tombol jalan)
+  if ((keys.a.pressed || keys.d.pressed || keys.j.pressed || keys.l.pressed) && 
+      (player1.velocity.y === 0 || player2.velocity.y === 0)) {
+    if (walkSound.paused) walkSound.play();
+  } else {
+    walkSound.pause();
   }
 }
-const keys = {
-  a: { pressed: false },
-  d: { pressed: false },
-  l: { pressed: false },
-  j: { pressed: false },
-};
+
+// --- EVENT LISTENERS ---
+startBtn.addEventListener("click", () => {
+  // Update Nama
+  const p1Name = document.getElementById("p1-name-input").value || "Samurai";
+  const p2Name = document.getElementById("p2-name-input").value || "Shinobi";
+  document.getElementById("display-p1-name").innerText = p1Name;
+  document.getElementById("display-p2-name").innerText = p2Name;
+
+  // Transisi Scene
+  startScene.style.display = "none";
+  battleScene.style.display = "flex";
+
+  // Jalankan BGM & Game
+  backgroundMusic.play();
+  animate();
+});
 
 window.addEventListener("keydown", (event) => {
   switch (event.key) {
-    //kontrol untuk player 1
+    // Player 1
     case "d":
       keys.d.pressed = true;
       lastKeyP1 = "d";
-      walkSound.currentTime = 0; // Mulai ulang suara langkah kaki setiap kali tombol ditekan
-      walkSound.play();
       break;
     case "a":
       keys.a.pressed = true;
       lastKeyP1 = "a";
-      walkSound.currentTime = 0; // Mulai ulang suara langkah kaki setiap kali tombol ditekan
-      walkSound.play();
       break;
     case "w":
-      if (player1.velocity.y === 0) player1.velocity.y = -20;
-      jumpSound.currentTime = 0;
-      jumpSound.play();
-
+      if (player1.velocity.y === 0) {
+        player1.velocity.y = -20;
+        jumpSound.currentTime = 0;
+        jumpSound.play();
+      }
       break;
     case "c":
       player1.attack();
@@ -191,23 +190,21 @@ window.addEventListener("keydown", (event) => {
       skill1Sound1.play();
       break;
 
-    // Kontrol untuk player 2
+    // Player 2
     case "l":
       keys.l.pressed = true;
       lastKeyP2 = "l";
-      walkSound.currentTime = 0;
-      walkSound.play();
       break;
     case "j":
       keys.j.pressed = true;
       lastKeyP2 = "j";
-      walkSound.currentTime = 0;
-      walkSound.play();
       break;
     case "i":
-      if (player2.velocity.y === 0) player2.velocity.y = -20;
-      jumpSound.currentTime = 0;
-      jumpSound.play();
+      if (player2.velocity.y === 0) {
+        player2.velocity.y = -20;
+        jumpSound.currentTime = 0;
+        jumpSound.play();
+      }
       break;
     case "n":
       player2.attack();
@@ -219,21 +216,9 @@ window.addEventListener("keydown", (event) => {
 
 window.addEventListener("keyup", (event) => {
   switch (event.key) {
-    case "d":
-      keys.d.pressed = false;
-      lastKeyP1 = "";
-      break;
-    case "a":
-      keys.a.pressed = false;
-      break;
-
-    case "l":
-      keys.l.pressed = false;
-      break;
-    case "j":
-      keys.j.pressed = false;
-      break;
+    case "d": keys.d.pressed = false; break;
+    case "a": keys.a.pressed = false; break;
+    case "l": keys.l.pressed = false; break;
+    case "j": keys.j.pressed = false; break;
   }
 });
-
-animate();
