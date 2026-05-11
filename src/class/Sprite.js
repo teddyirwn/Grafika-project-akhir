@@ -9,25 +9,46 @@ export class Sprite {
     this.frameCurrent = 0;
     this.framesElapsed = 0;
     this.framesHold = 5;
+    this.facing = "right";
   }
-
-  // funsi menampilkan gambar di canvas
 
   draw(ctx) {
-    ctx.drawImage(
-      this.image,
-      this.frameCurrent * (this.image.width / this.framesMax),
-      0,
-      this.image.width / this.framesMax,
-      this.image.height,
-      this.position.x,
-      this.position.y,
-      (this.image.width / this.framesMax) * this.scale,
-      this.image.height * this.scale,
-    );
-  }
+    const scaledWidth = (this.image.width / this.framesMax) * this.scale;
+    const scaledHeight = this.image.height * this.scale;
 
-  // fungsi untuk menggerak frame gambar  / animasikan
+    ctx.save();
+
+    if (this.facing === "left") {
+      ctx.translate(this.position.x + scaledWidth, this.position.y);
+      ctx.scale(-1, 1);
+
+      ctx.drawImage(
+        this.image,
+        this.frameCurrent * (this.image.width / this.framesMax),
+        0,
+        this.image.width / this.framesMax,
+        this.image.height,
+        0,
+        0,
+        scaledWidth,
+        scaledHeight,
+      );
+    } else {
+      ctx.drawImage(
+        this.image,
+        this.frameCurrent * (this.image.width / this.framesMax),
+        0,
+        this.image.width / this.framesMax,
+        this.image.height,
+        this.position.x,
+        this.position.y,
+        scaledWidth,
+        scaledHeight,
+      );
+    }
+
+    ctx.restore();
+  }
 
   update(ctx) {
     this.draw(ctx);

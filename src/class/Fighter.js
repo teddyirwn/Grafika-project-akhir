@@ -20,6 +20,7 @@ export class Fighter extends Sprite {
     this.isAttacking = false;
     this.color = color;
     this.dead = false;
+    this.facing = "right";
 
     this.sprites = sprites;
     for (const sprite in this.sprites) {
@@ -60,7 +61,6 @@ export class Fighter extends Sprite {
   attack() {
     this.switchSprite("attack");
     this.isAttacking = true;
-
     setTimeout(() => {
       this.isAttacking = false;
     }, 100);

@@ -9,6 +9,9 @@ const ctx = canvas.getContext("2d");
 canvas.width = CONFIG.canvasWidth;
 canvas.height = CONFIG.canvasHeight;
 
+let lastKeyP1 = "";
+let lastKeyP2 = "";
+
 // player 1
 const player1 = new Fighter({
   position: { x: 100, y: 0 },
@@ -46,8 +49,6 @@ const player2 = new Fighter({
   },
 });
 
-console.log(player1.imageSrc);
-console.log(player2.imageSrc);
 function animate() {
   window.requestAnimationFrame(animate);
 
@@ -57,56 +58,97 @@ function animate() {
   player1.update(ctx, canvas.height);
   player2.update(ctx, canvas.height);
 
+  // LOGIKA GERAK PLAYER 1
   player1.velocity.x = 0;
-  if (keys.d.pressed) {
+  if (keys.d.pressed && lastKeyP1 === "d") {
     player1.velocity.x = 5;
+    player1.facing = "right";
     player1.switchSprite("run");
-  } else if (keys.a.pressed) {
+  } else if (keys.a.pressed && lastKeyP1 === "a") {
     player1.velocity.x = -5;
+    player1.facing = "left";
     player1.switchSprite("run");
   } else {
     player1.switchSprite("idle");
   }
 
-  // Logika Lompat
-  if (player1.velocity.y < 0) {
-    player1.switchSprite("jump");
+  // LOGIKA GERAK PLAYER 2
+  player2.velocity.x = 0;
+  if (keys.ArrowRight.pressed && lastKeyP2 === "ArrowRight") {
+    player2.velocity.x = 5;
+    player2.facing = "right"; // Biasanya player 2 hadap kanan dulu
+    player2.switchSprite("run");
+  } else if (keys.ArrowLeft.pressed && lastKeyP2 === "ArrowLeft") {
+    player2.velocity.x = -5;
+    player2.facing = "left";
+    player2.switchSprite("run");
+  } else {
+    player2.switchSprite("idle");
   }
+
+  // Logika Animasi Lompat (Jika sedang naik/turun)
+  if (player1.velocity.y < 0) player1.switchSprite("jump");
+  if (player2.velocity.y < 0) player2.switchSprite("jump");
 }
 const keys = {
   a: { pressed: false },
   d: { pressed: false },
+  ArrowRight: { pressed: false },
+  ArrowLeft: { pressed: false },
 };
 
-// player 1 console
-if (player1) {
-  window.addEventListener("keydown", (event) => {
-    switch (event.key) {
-      case "d":
-        keys.d.pressed = true;
-        break;
-      case "a":
-        keys.a.pressed = true;
-        break;
-      case "w":
-        player1.velocity.y = -20;
-        break; // Lompat
-      case " ":
-        player1.attack();
-        break; // Spasi untuk serang
-    }
-  });
+window.addEventListener("keydown", (event) => {
+  switch (event.key) {
+    case "d":
+      keys.d.pressed = true;
+      lastKeyP1 = "d";
+      break;
+    case "a":
+      keys.a.pressed = true;
+      lastKeyP1 = "a";
+      break;
+    case "w":
+      if (player1.velocity.y === 0) player1.velocity.y = -20;
+      break;
+    case " ":
+      player1.attack();
+      break;
 
-  window.addEventListener("keyup", (event) => {
-    switch (event.key) {
-      case "d":
-        keys.d.pressed = false;
-        break;
-      case "a":
-        keys.a.pressed = false;
-        break;
-    }
-  });
-}
+    // Kontrol untuk player 2
+    case "ArrowRight":
+      keys.ArrowRight.pressed = true;
+      lastKeyP2 = "ArrowRight";
+      break;
+    case "ArrowLeft":
+      keys.ArrowLeft.pressed = true;
+      lastKeyP2 = "ArrowLeft";
+      break;
+    case "ArrowUp":
+      if (player2.velocity.y === 0) player2.velocity.y = -20;
+      break;
+    case "Enter":
+      player2.attack();
+      break;
+  }
+});
+
+window.addEventListener("keyup", (event) => {
+  switch (event.key) {
+    case "d":
+      keys.d.pressed = false;
+      lastKeyP1 = "";
+      break;
+    case "a":
+      keys.a.pressed = false;
+      break;
+
+    case "ArrowRight":
+      keys.ArrowRight.pressed = false;
+      break;
+    case "ArrowLeft":
+      keys.ArrowLeft.pressed = false;
+      break;
+  }
+});
 
 animate();
