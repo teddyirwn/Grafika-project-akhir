@@ -1,6 +1,6 @@
 export const CONFIG = {
   gravity: 0.8,
-  canvasWidth: 1024,
-  canvasHeight: 576,
+  canvasWidth: 800,
+  canvasHeight: 450,
   groundMargin: 100,
 };

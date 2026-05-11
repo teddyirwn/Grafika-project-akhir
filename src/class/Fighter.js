@@ -72,6 +72,8 @@ export class Fighter extends Sprite {
       this.frameCurrent < this.sprites.attack.framesMax - 1
     )
       return;
+    
+    
 
     if (this.image !== this.sprites[sprite].image) {
       this.image = this.sprites[sprite].image;

@@ -2,6 +2,7 @@ import "../style/style.css";
 import "../modifikasi/t.mo";
 import { CONFIG } from "../data/config";
 import { Fighter } from "../class/Fighter";
+import { Sprite } from "../class/Sprite";
 
 const canvas = document.getElementById("arena");
 const ctx = canvas.getContext("2d");
@@ -12,6 +13,10 @@ canvas.height = CONFIG.canvasHeight;
 let lastKeyP1 = "";
 let lastKeyP2 = "";
 
+const background = new Sprite({
+  position: { x: 0, y: 0 },
+  imageSrc: "/asset/backgrounds/game_background_2/game_background_2.png",
+});
 // player 1
 const player1 = new Fighter({
   position: { x: 100, y: 0 },
@@ -51,10 +56,10 @@ const player2 = new Fighter({
 
 function animate() {
   window.requestAnimationFrame(animate);
-
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = "white";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
-
+  background.update(ctx);
   player1.update(ctx, canvas.height);
   player2.update(ctx, canvas.height);
 

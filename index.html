@@ -8,25 +8,66 @@
   </head>
   <body>
     <div class="container">
-      <div class="player1">
-        <ul>
-          <li>w = Lompat</li>
-          <li>c = Serang</li>
-          <li>d = Bergerak ke kanan</li>
-          <li>a = Bergerak ke kiri</li>
-        </ul>
+      <!-- info controller player 1 -->
+      <div class="player">
+        <div class="info-header">
+          <div class="foto"></div>
+          <div class="info">
+            <h4>Player 1</h4>
+            <p>Player 1</p>
+          </div>
+        </div>
+        <p>Keyboard Controls:</p>
+        <hr />
+        <div class="info-card">
+          <h4>Lompat</h4>
+          <span>W</span>
+        </div>
+        <div class="info-card">
+          <h4>Kiri</h4>
+          <span>A</span>
+        </div>
+        <div class="info-card">
+          <h4>kanan</h4>
+          <span>D</span>
+        </div>
+        <div class="info-card">
+          <h4>Serang</h4>
+          <span>C</span>
+        </div>
       </div>
-      <div class="arena">
+      <div class="arena-Container">
         <h1>Title Game</h1>
         <canvas id="arena"></canvas>
       </div>
-      <div class="player2">
-        <ul>
-          <li>n = Serang</li>
-          <li>l = Bergerak ke kanan</li>
-          <li>j = Bergerak ke kiri</li>
-          <li>i = Lompat</li>
-        </ul>
+
+      <!-- info controller player 2 -->
+      <div class="player">
+        <div class="info-header">
+          <div class="foto"></div>
+          <div class="info">
+            <h4>Player 1</h4>
+            <p>Player 1</p>
+          </div>
+        </div>
+        <p>Keyboard Controls:</p>
+        <hr />
+        <div class="info-card">
+          <h4>Lompat</h4>
+          <span>W</span>
+        </div>
+        <div class="info-card">
+          <h4>Kiri</h4>
+          <span>J</span>
+        </div>
+        <div class="info-card">
+          <h4>kanan</h4>
+          <span>L</span>
+        </div>
+        <div class="info-card">
+          <h4>Serang</h4>
+          <span>N</span>
+        </div>
       </div>
     </div>
     <script type="module" src="/src/script/main.js"></script>
