@@ -6,7 +6,6 @@ body {
 
 #arena {
   border: 2px solid black;
-
   border-radius: 10px;
 }
 
@@ -17,6 +16,8 @@ body {
   width: 100%;
   height: 100vh;
   gap: 10px;
+  
+  
 }
 
 .player1,
