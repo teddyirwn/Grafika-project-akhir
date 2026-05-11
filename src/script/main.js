@@ -44,7 +44,7 @@ const player2 = new Fighter({
     jump: { imageSrc: "/asset/characters/Shinobi/Jump.png", framesMax: 12 },
     attack: {
       imageSrc: "/asset/characters/Shinobi/Attack_1.png",
-      framesMax: 6,
+      framesMax: 5,
     },
   },
 });
@@ -74,11 +74,11 @@ function animate() {
 
   // LOGIKA GERAK PLAYER 2
   player2.velocity.x = 0;
-  if (keys.ArrowRight.pressed && lastKeyP2 === "ArrowRight") {
+  if (keys.l.pressed && lastKeyP2 === "l") {
     player2.velocity.x = 5;
     player2.facing = "right"; // Biasanya player 2 hadap kanan dulu
     player2.switchSprite("run");
-  } else if (keys.ArrowLeft.pressed && lastKeyP2 === "ArrowLeft") {
+  } else if (keys.j.pressed && lastKeyP2 === "j") {
     player2.velocity.x = -5;
     player2.facing = "left";
     player2.switchSprite("run");
@@ -93,8 +93,8 @@ function animate() {
 const keys = {
   a: { pressed: false },
   d: { pressed: false },
-  ArrowRight: { pressed: false },
-  ArrowLeft: { pressed: false },
+  l: { pressed: false },
+  j: { pressed: false },
 };
 
 window.addEventListener("keydown", (event) => {
@@ -110,23 +110,23 @@ window.addEventListener("keydown", (event) => {
     case "w":
       if (player1.velocity.y === 0) player1.velocity.y = -20;
       break;
-    case " ":
+    case "c":
       player1.attack();
       break;
 
     // Kontrol untuk player 2
-    case "ArrowRight":
-      keys.ArrowRight.pressed = true;
-      lastKeyP2 = "ArrowRight";
+    case "l":
+      keys.l.pressed = true;
+      lastKeyP2 = "l";
       break;
-    case "ArrowLeft":
-      keys.ArrowLeft.pressed = true;
-      lastKeyP2 = "ArrowLeft";
+    case "j":
+      keys.j.pressed = true;
+      lastKeyP2 = "j";
       break;
-    case "ArrowUp":
+    case "i":
       if (player2.velocity.y === 0) player2.velocity.y = -20;
       break;
-    case "Enter":
+    case "n":
       player2.attack();
       break;
   }
@@ -142,11 +142,11 @@ window.addEventListener("keyup", (event) => {
       keys.a.pressed = false;
       break;
 
-    case "ArrowRight":
-      keys.ArrowRight.pressed = false;
+    case "l":
+      keys.l.pressed = false;
       break;
-    case "ArrowLeft":
-      keys.ArrowLeft.pressed = false;
+    case "j":
+      keys.j.pressed = false;
       break;
   }
 });
