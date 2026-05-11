@@ -79,4 +79,11 @@ export class Fighter extends Sprite {
       this.frameCurrent = 0;
     }
   }
+
+  takeHit() {
+    this.health -= 20;
+    if (this.health <= 0) {
+      this.dead = true;
+    }
+  }
 }
