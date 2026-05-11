@@ -1,0 +1,82 @@
+import { CONFIG } from "../data/config";
+import { Sprite } from "./Sprite";
+
+export class Fighter extends Sprite {
+  constructor({
+    position,
+    velocity,
+    color = "red",
+    imageSrc,
+    scale = 1,
+    framesMax = 1,
+    offset = { x: 0, y: 0 },
+    sprites,
+  }) {
+    super({ position, imageSrc, scale, framesMax });
+    this.velocity = velocity; // kecepatan gerak
+    this.width = 50;
+    this.height = 150;
+    this.health = 100;
+    this.isAttacking = false;
+    this.color = color;
+    this.dead = false;
+
+    this.sprites = sprites;
+    for (const sprite in this.sprites) {
+      sprites[sprite].image = new Image();
+      sprites[sprite].image.src = sprites[sprite].imageSrc;
+    }
+
+    this.attackBox = {
+      position: { x: this.position.x, y: this.position.y },
+      width: 100,
+      height: 50,
+    };
+  }
+
+  update(ctx, canvasHeight) {
+    super.update(ctx);
+
+    // gerakan attack box mengikuti posisi fighter
+    this.attackBox.position.x = this.position.x;
+    this.attackBox.position.y = this.position.y;
+
+    // update posisi fighter berdasarkan kecepatan
+    this.position.x += this.velocity.x;
+    this.position.y += this.velocity.y;
+
+    // buat jika benturan dengan lantai
+    if (
+      this.position.y + this.height + this.velocity.y >=
+      canvasHeight - CONFIG.groundMargin
+    ) {
+      this.velocity.y = 0;
+      //   this.position.y = canvasHeight -  - this.height;
+    } else {
+      this.velocity.y += CONFIG.gravity;
+    }
+  }
+
+  attack() {
+    this.switchSprite("attack");
+    this.isAttacking = true;
+
+    setTimeout(() => {
+      this.isAttacking = false;
+    }, 100);
+  }
+
+  switchSprite(sprite) {
+    if (
+      this.image === this.sprites.attack.image &&
+      this.frameCurrent < this.sprites.attack.framesMax - 1
+    )
+      return;
+
+    if (this.image !== this.sprites[sprite].image) {
+      this.image = this.sprites[sprite].image;
+      this.framesMax = this.sprites[sprite].framesMax;
+      this.frameCurrent = 0;
+    }
+  }
+}
