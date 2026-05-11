@@ -6,8 +6,7 @@ body {
 
 #arena {
   border: 2px solid black;
-  width: 800px;
-  height: 500px;
+
   border-radius: 10px;
 }
 
