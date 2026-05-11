@@ -3,107 +3,107 @@ body {
   margin: 0;
   box-sizing: border-box;
   background-color: #f0f2f5;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   overflow-x: hidden; /* Mencegah scroll horizontal */
 }
 
 /* START SCENE (MENU UTAMA) */
 #start-scene {
-    background: radial-gradient(circle, #ffffff 0%, #f0f4f2 100%);
-    height: 100vh;
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    position: fixed; 
-    top: 0;
-    left: 0;
-    z-index: 999;
+  background: radial-gradient(circle, #ffffff 0%, #f0f4f2 100%);
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 999;
 }
 
 .start-card {
-    background: white;
-    padding: 40px;
-    border-radius: 24px;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.05);
-    text-align: center;
-    width: 380px;
+  background: white;
+  padding: 40px;
+  border-radius: 24px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.05);
+  text-align: center;
+  width: 380px;
 }
 
 .logo-icon {
-    font-size: 3rem;
-    margin-bottom: 10px;
+  font-size: 3rem;
+  margin-bottom: 10px;
 }
 
 .start-card h1 {
-    color: #006944;
-    font-size: 2.3rem;
-    margin: 0;
-    font-weight: 800;
+  color: #006944;
+  font-size: 2.3rem;
+  margin: 0;
+  font-weight: 800;
 }
 
 .input-group {
-    background: #fafafa;
-    border: 1px solid #eee;
-    padding: 25px;
-    border-radius: 18px;
-    margin: 20px 0;
-    text-align: left;
+  background: #fafafa;
+  border: 1px solid #eee;
+  padding: 25px;
+  border-radius: 18px;
+  margin: 20px 0;
+  text-align: left;
 }
 
 .field label {
-    display: block;
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: #666;
-    margin-bottom: 5px;
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #666;
+  margin-bottom: 5px;
 }
 
 .field input {
-    width: 100%;
-    padding: 12px;
-    border: 1px solid #e0e0e0;
-    border-radius: 10px;
-    margin-bottom: 10px;
-    box-sizing: border-box;
-    font-size: 1rem;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  box-sizing: border-box;
+  font-size: 1rem;
 }
 
 .vs-divider {
-    text-align: center;
-    margin: 10px 0;
-    color: #bbb;
-    font-size: 0.7rem;
-    font-weight: bold;
-    letter-spacing: 2px;
+  text-align: center;
+  margin: 10px 0;
+  color: #bbb;
+  font-size: 0.7rem;
+  font-weight: bold;
+  letter-spacing: 2px;
 }
 
 #start-btn {
-    background: #006944;
-    color: white;
-    width: 100%;
-    padding: 16px;
-    border: none;
-    border-radius: 12px;
-    font-size: 1.1rem;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background 0.3s ease;
+  background: #006944;
+  color: white;
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s ease;
 }
 
 #start-btn:hover {
-    background: #004d32;
+  background: #004d32;
 }
 
 /*BATTLE SCENE (ARENA & KONTROL)*/
 
 /* Wrapper Utama Game */
 #battle-scene {
-    display: none; /* Akan diubah jadi 'flex' via JS */
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    min-height: 100vh;
+  display: none; /* Akan diubah jadi 'flex' via JS */
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  min-height: 100vh;
 }
 
 /* Container yang mengatur posisi mendatar (Horizontal) */
@@ -125,7 +125,7 @@ body {
   background-color: white;
   border: 2px solid #dff1f1;
   border-radius: 15px;
-  box-shadow: 0 10px 20px rgba(0,0,0,0.02);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.02);
 }
 
 .player p {
@@ -172,7 +172,7 @@ body {
   border: 4px solid #333;
   border-radius: 12px;
   background-color: #000;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
   max-width: 100%; /* Agar responsif */
 }
 
@@ -208,4 +208,58 @@ hr {
   border: 0;
   border-top: 1px solid #eee;
   margin: 15px 0;
+}
+
+#health-container {
+  position: absolute;
+  top: 240px;
+  width: 589px; /* Sesuaikan dengan lebar canvas kamu */
+  display: flex;
+  justify-content: space-between;
+  padding: 20px;
+  box-sizing: border-box;
+  pointer-events: none; /* Agar klik mouse tidak terhalang */
+}
+
+.health-bar-wrapper {
+  position: relative;
+  width: 30%;
+  height: 10px;
+  background-color: #555; /* Warna background bar (kosong) */
+  border: 4px solid white;
+}
+
+.health-bar-fill {
+  height: 100%;
+  width: 100%;
+  background-color: #ff4757;
+  transition: width 0.3s ease;
+}
+
+#player2-health {
+  margin-left: auto;
+}
+
+#game-over-screen {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 40px;
+  text-align: center;
+  border: 5px solid white;
+  display: none;
+  z-index: 20;
+  font-family: "Press Start 2P", cursive;
+}
+
+#game-over-screen button {
+  margin-top: 20px;
+  padding: 10px 20px;
+  cursor: pointer;
+  background: white;
+  border: none;
+  font-weight: bold;
 }

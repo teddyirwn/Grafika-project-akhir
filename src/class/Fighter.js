@@ -20,6 +20,7 @@ export class Fighter extends Sprite {
     this.isAttacking = false;
     this.color = color;
     this.dead = false;
+    this.offset = offset;
     this.facing = "right";
 
     this.sprites = sprites;
@@ -45,6 +46,16 @@ export class Fighter extends Sprite {
     // update posisi fighter berdasarkan kecepatan
     this.position.x += this.velocity.x;
     this.position.y += this.velocity.y;
+
+    // BATAS TEMBOK  KIRI
+    if (this.position.x < 0) {
+      this.position.x = 0;
+    }
+
+    // BATAS TEMBOK  KANAN
+    if (this.position.x + this.width > CONFIG.canvasWidth) {
+      this.position.x = CONFIG.canvasWidth - this.width;
+    }
 
     // buat jika benturan dengan lantai
     if (
@@ -72,8 +83,6 @@ export class Fighter extends Sprite {
       this.frameCurrent < this.sprites.attack.framesMax - 1
     )
       return;
-    
-    
 
     if (this.image !== this.sprites[sprite].image) {
       this.image = this.sprites[sprite].image;
@@ -82,10 +91,17 @@ export class Fighter extends Sprite {
     }
   }
 
+  // Logika untuk mengurangi health saat terkena serangan
   takeHit() {
+    if (this.dead) return; // Jika sudah mati maka berenti
     this.health -= 20;
     if (this.health <= 0) {
+      this.health = 0;
       this.dead = true;
+
+      if (this.sprites.death) {
+        this.switchSprite("death");
+      }
     }
   }
 }

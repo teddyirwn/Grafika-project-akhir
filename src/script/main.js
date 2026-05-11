@@ -1,5 +1,4 @@
 import "../style/style.css";
-import "../modifikasi/t.mo";
 import { CONFIG } from "../data/config";
 import { Fighter } from "../class/Fighter";
 import { Sprite } from "../class/Sprite";
@@ -12,6 +11,10 @@ const startScene = document.getElementById("start-scene");
 const battleScene = document.getElementById("battle-scene");
 const startBtn = document.getElementById("start-btn");
 
+// --- INISIALISASI HEALTH BAR ---
+const player1Health = document.getElementById("player1-health");
+const player2Health = document.getElementById("player2-health");
+
 // --- INISIALISASI AUDIO ---
 const menuMusic = new Audio("/asset/audio/bgm/bgm_menu.wav");
 const backgroundMusic = new Audio("/asset/audio/bgm/bgm_fight.wav");
@@ -19,10 +22,18 @@ const jumpSound = new Audio("/asset/audio/sfx/movement/sfx_jump.wav");
 const landSound = new Audio("/asset/audio/sfx/movement/sfx_landing.wav");
 const walkSound = new Audio("/asset/audio/sfx/movement/sfx_walking_grass.wav");
 
-const skill1Sound1 = new Audio("/asset/audio/sfx/combat/weapon/sfx_player1_skill1.wav");
-const skill2Sound1 = new Audio("/asset/audio/sfx/combat/weapon/sfx_player1_skill2.wav");
-const skill1Sound2 = new Audio("/asset/audio/sfx/combat/weapon/sfx_player2_skill1.wav");
-const skill2Sound2 = new Audio("/asset/audio/sfx/combat/weapon/sfx_player2_skill2.wav");
+const skill1Sound1 = new Audio(
+  "/asset/audio/sfx/combat/weapon/sfx_player1_skill1.wav",
+);
+const skill2Sound1 = new Audio(
+  "/asset/audio/sfx/combat/weapon/sfx_player1_skill2.wav",
+);
+const skill1Sound2 = new Audio(
+  "/asset/audio/sfx/combat/weapon/sfx_player2_skill1.wav",
+);
+const skill2Sound2 = new Audio(
+  "/asset/audio/sfx/combat/weapon/sfx_player2_skill2.wav",
+);
 
 // Pengaturan Audio
 menuMusic.volume = 0.2;
@@ -49,6 +60,7 @@ const background = new Sprite({
 const player1 = new Fighter({
   position: { x: 50, y: 0 },
   velocity: { x: 0, y: 0 },
+  offset: { x: 100, y: 0 },
   color: "blue",
   imageSrc: "/asset/characters/Samurai/Idle.png",
   framesMax: 6,
@@ -57,13 +69,21 @@ const player1 = new Fighter({
     idle: { imageSrc: "/asset/characters/Samurai/Idle.png", framesMax: 6 },
     run: { imageSrc: "/asset/characters/Samurai/Run.png", framesMax: 8 },
     jump: { imageSrc: "/asset/characters/Samurai/Jump.png", framesMax: 12 },
-    attack: { imageSrc: "/asset/characters/Samurai/Attack_1.png", framesMax: 6 },
+    attack: {
+      imageSrc: "/asset/characters/Samurai/Attack_1.png",
+      framesMax: 6,
+    },
+    death: {
+      imageSrc: "/asset/characters/Samurai/Dead.png",
+      framesMax: 3,
+    },
   },
 });
 
 const player2 = new Fighter({
-  position: { x: 500, y: 0 },
+  position: { x: 700, y: 0 },
   velocity: { x: 0, y: 0 },
+  offset: { x: 100, y: 0 },
   color: "blue",
   imageSrc: "/asset/characters/Shinobi/Idle.png",
   framesMax: 6,
@@ -72,7 +92,14 @@ const player2 = new Fighter({
     idle: { imageSrc: "/asset/characters/Shinobi/Idle.png", framesMax: 6 },
     run: { imageSrc: "/asset/characters/Shinobi/Run.png", framesMax: 8 },
     jump: { imageSrc: "/asset/characters/Shinobi/Jump.png", framesMax: 12 },
-    attack: { imageSrc: "/asset/characters/Shinobi/Attack_1.png", framesMax: 5 },
+    attack: {
+      imageSrc: "/asset/characters/Shinobi/Attack_1.png",
+      framesMax: 5,
+    },
+    death: {
+      imageSrc: "/asset/characters/Shinobi/Dead.png",
+      framesMax: 4,
+    },
   },
 });
 
@@ -87,37 +114,72 @@ const keys = {
 function animate() {
   window.requestAnimationFrame(animate);
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  
+
   background.update(ctx);
   player1.update(ctx, canvas.height);
   player2.update(ctx, canvas.height);
 
+  // logika untuk mengecek pemenang
+  if (player1.health <= 0 || player2.health <= 0) {
+    winnerCheck({ player1: player1, player2: player2 });
+  }
+
+  // logic Untuk mengecek benturan serangan
+  // PLAYER 1 MENYERANG PLAYER 2
+  if (
+    Serangan({
+      attacker: player1,
+      victim: player2,
+    }) &&
+    player1.isAttacking
+  ) {
+    player2.takeHit();
+    player1.isAttacking = false;
+    player2Health.style.width = player2.health + "%";
+  }
+
+  // PLAYER 2 MENYERANG PLAYER 1
+  if (
+    Serangan({
+      attacker: player2,
+      victim: player1,
+    }) &&
+    player2.isAttacking
+  ) {
+    player1.takeHit();
+    player2.isAttacking = false;
+    player1Health.style.width = player1.health + "%";
+  }
   // LOGIKA GERAK PLAYER 1
-  player1.velocity.x = 0;
-  if (keys.d.pressed && lastKeyP1 === "d") {
-    player1.velocity.x = 5;
-    player1.facing = "right";
-    player1.switchSprite("run");
-  } else if (keys.a.pressed && lastKeyP1 === "a") {
-    player1.velocity.x = -5;
-    player1.facing = "left";
-    player1.switchSprite("run");
-  } else {
-    player1.switchSprite("idle");
+  if (!player1.dead) {
+    player1.velocity.x = 0;
+    if (keys.d.pressed && lastKeyP1 === "d") {
+      player1.velocity.x = 3;
+      player1.facing = "right";
+      player1.switchSprite("run");
+    } else if (keys.a.pressed && lastKeyP1 === "a") {
+      player1.velocity.x = -3;
+      player1.facing = "left";
+      player1.switchSprite("run");
+    } else {
+      player1.switchSprite("idle");
+    }
   }
 
   // LOGIKA GERAK PLAYER 2
-  player2.velocity.x = 0;
-  if (keys.l.pressed && lastKeyP2 === "l") {
-    player2.velocity.x = 5;
-    player2.facing = "right";
-    player2.switchSprite("run");
-  } else if (keys.j.pressed && lastKeyP2 === "j") {
-    player2.velocity.x = -5;
-    player2.facing = "left";
-    player2.switchSprite("run");
-  } else {
-    player2.switchSprite("idle");
+  if (!player2.dead) {
+    player2.velocity.x = 0;
+    if (keys.l.pressed && lastKeyP2 === "l") {
+      player2.velocity.x = 3;
+      player2.facing = "right";
+      player2.switchSprite("run");
+    } else if (keys.j.pressed && lastKeyP2 === "j") {
+      player2.velocity.x = -3;
+      player2.facing = "left";
+      player2.switchSprite("run");
+    } else {
+      player2.switchSprite("idle");
+    }
   }
 
   // Logika Animasi Lompat
@@ -141,8 +203,10 @@ function animate() {
   }
 
   // Logika Walk Sound (Hanya bunyi jika di tanah dan menekan tombol jalan)
-  if ((keys.a.pressed || keys.d.pressed || keys.j.pressed || keys.l.pressed) && 
-      (player1.velocity.y === 0 || player2.velocity.y === 0)) {
+  if (
+    (keys.a.pressed || keys.d.pressed || keys.j.pressed || keys.l.pressed) &&
+    (player1.velocity.y === 0 || player2.velocity.y === 0)
+  ) {
     if (walkSound.paused) walkSound.play();
   } else {
     walkSound.pause();
@@ -167,6 +231,8 @@ startBtn.addEventListener("click", () => {
 });
 
 window.addEventListener("keydown", (event) => {
+  console.log("KEY:", event.key);
+
   switch (event.key) {
     // Player 1
     case "d":
@@ -179,7 +245,7 @@ window.addEventListener("keydown", (event) => {
       break;
     case "w":
       if (player1.velocity.y === 0) {
-        player1.velocity.y = -20;
+        player1.velocity.y = -10;
         jumpSound.currentTime = 0;
         jumpSound.play();
       }
@@ -201,7 +267,7 @@ window.addEventListener("keydown", (event) => {
       break;
     case "i":
       if (player2.velocity.y === 0) {
-        player2.velocity.y = -20;
+        player2.velocity.y = -10;
         jumpSound.currentTime = 0;
         jumpSound.play();
       }
@@ -216,9 +282,50 @@ window.addEventListener("keydown", (event) => {
 
 window.addEventListener("keyup", (event) => {
   switch (event.key) {
-    case "d": keys.d.pressed = false; break;
-    case "a": keys.a.pressed = false; break;
-    case "l": keys.l.pressed = false; break;
-    case "j": keys.j.pressed = false; break;
+    case "d":
+      keys.d.pressed = false;
+      break;
+    case "a":
+      keys.a.pressed = false;
+      break;
+    case "l":
+      keys.l.pressed = false;
+      break;
+    case "j":
+      keys.j.pressed = false;
+      break;
   }
 });
+
+// fungsi untuk mengecek benturan serangan
+function Serangan({ attacker, victim }) {
+  const victimWidth = (victim.image.width / victim.framesMax) * victim.scale;
+  const victimHeight = victim.image.height * victim.scale;
+
+  return (
+    attacker.attackBox.position.x < victim.position.x + victimWidth &&
+    attacker.attackBox.position.x + attacker.attackBox.width >
+      victim.position.x &&
+    attacker.attackBox.position.y < victim.position.y + victimHeight &&
+    attacker.attackBox.position.y + attacker.attackBox.height >
+      victim.position.y
+  );
+}
+
+// fungsi untuk mengecek pemenang
+function winnerCheck({ player1, player2 }) {
+  const screen = document.querySelector("#game-over-screen");
+  const text = document.querySelector("#winner-text");
+  const p1Name = document.getElementById("display-p1-name").innerText;
+  const p2Name = document.getElementById("display-p2-name").innerText;
+
+  screen.style.display = "block";
+
+  if (player1.health === player2.health) {
+    text.innerHTML = "TIE (SERI)";
+  } else if (player1.health > player2.health) {
+    text.innerHTML = p1Name + " WINS!";
+  } else {
+    text.innerHTML = p2Name + " WINS!";
+  }
+}

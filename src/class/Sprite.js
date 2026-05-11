@@ -1,9 +1,16 @@
 export class Sprite {
-  constructor({ position, imageSrc, scale = 1, framesMax = 1 }) {
+  constructor({
+    position,
+    imageSrc,
+    scale = 1,
+    framesMax = 1,
+    offset = { x: 0, y: 0 },
+  }) {
     this.position = position;
     this.imageSrc = imageSrc;
     this.scale = scale;
     this.framesMax = framesMax;
+    this.offset = offset;
     this.image = new Image();
     this.image.src = imageSrc;
     this.frameCurrent = 0;
@@ -19,7 +26,10 @@ export class Sprite {
     ctx.save();
 
     if (this.facing === "left") {
-      ctx.translate(this.position.x + scaledWidth, this.position.y);
+      ctx.translate(
+        this.position.x - this.offset.x + scaledWidth,
+        this.position.y - this.offset.y,
+      );
       ctx.scale(-1, 1);
 
       ctx.drawImage(
@@ -40,8 +50,8 @@ export class Sprite {
         0,
         this.image.width / this.framesMax,
         this.image.height,
-        this.position.x,
-        this.position.y,
+        this.position.x - this.offset.x,
+        this.position.y - this.offset.y,
         scaledWidth,
         scaledHeight,
       );
@@ -52,6 +62,11 @@ export class Sprite {
 
   update(ctx) {
     this.draw(ctx);
+
+    // jika sudah mati, tetap di frame terakhir
+    if (this.dead && this.frameCurrent === this.framesMax - 1) {
+      return;
+    }
     this.framesElapsed++;
 
     if (this.framesElapsed % this.framesHold === 0) {
