@@ -109,6 +109,7 @@ body {
 /* Container yang mengatur posisi mendatar (Horizontal) */
 .container {
   display: flex;
+  position: relative;
   flex-direction: row; /* Memastikan elemen tetap menyamping */
   justify-content: center;
   align-items: center;
@@ -212,7 +213,7 @@ hr {
 
 #health-container {
   position: absolute;
-  top: 240px;
+  top: 100px;
   width: 589px; /* Sesuaikan dengan lebar canvas kamu */
   display: flex;
   justify-content: space-between;
