@@ -58,7 +58,7 @@ const background = new Sprite({
 });
 
 const player1 = new Fighter({
-  position: { x: 50, y: 0 },
+  position: { x: 80, y: 0 },
   velocity: { x: 0, y: 0 },
   offset: { x: 100, y: 0 },
   color: "blue",
@@ -81,7 +81,7 @@ const player1 = new Fighter({
 });
 
 const player2 = new Fighter({
-  position: { x: 700, y: 0 },
+  position: { x: 1230, y: 0 },
   velocity: { x: 0, y: 0 },
   offset: { x: 100, y: 0 },
   color: "blue",
