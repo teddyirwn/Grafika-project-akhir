@@ -103,6 +103,15 @@ const player2 = new Fighter({
   },
 });
 
+// Atur arah awal supaya kedua pemain saling berhadapan saat spawn
+if (player1.position.x < player2.position.x) {
+  player1.facing = "right";
+  player2.facing = "left";
+} else {
+  player1.facing = "left";
+  player2.facing = "right";
+}
+
 const keys = {
   a: { pressed: false },
   d: { pressed: false },
