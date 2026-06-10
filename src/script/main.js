@@ -64,7 +64,7 @@ const player1 = new Fighter({
   color: "blue",
   imageSrc: "/asset/characters/Samurai/Idle.png",
   framesMax: 6,
-  scale: 1.8,
+  scale: 2.9,
   sprites: {
     idle: { imageSrc: "/asset/characters/Samurai/Idle.png", framesMax: 6 },
     run: { imageSrc: "/asset/characters/Samurai/Run.png", framesMax: 8 },
@@ -87,7 +87,7 @@ const player2 = new Fighter({
   color: "blue",
   imageSrc: "/asset/characters/Shinobi/Idle.png",
   framesMax: 6,
-  scale: 1.8,
+  scale: 2.9,
   sprites: {
     idle: { imageSrc: "/asset/characters/Shinobi/Idle.png", framesMax: 6 },
     run: { imageSrc: "/asset/characters/Shinobi/Run.png", framesMax: 8 },

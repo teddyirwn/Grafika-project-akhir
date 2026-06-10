@@ -121,7 +121,7 @@ body {
 
 /* Kartu Kontrol Player */
 .player {
-  flex: 0 0 280px; /* Lebar tetap agar tidak melebar memenuhi layar */
+  flex: 0 0 200px; /* Lebar tetap agar tidak melebar memenuhi layar */
   padding: 25px;
   background-color: white;
   border: 2px solid #dff1f1;
