@@ -214,7 +214,7 @@ hr {
 #health-container {
   position: absolute;
   top: 100px;
-  width: 589px; /* Sesuaikan dengan lebar canvas kamu */
+  width: 760px; /* Sesuaikan dengan lebar canvas kamu */
   display: flex;
   justify-content: space-between;
   padding: 20px;

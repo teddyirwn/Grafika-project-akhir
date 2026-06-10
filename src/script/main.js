@@ -237,9 +237,19 @@ startBtn.addEventListener("click", () => {
 
   // Jalankan BGM & Game
   backgroundMusic.play();
+  menuMusic.pause();
   animate();
 });
 
+window.onload = () => {
+  document.body.addEventListener(
+    "click",
+    () => {
+      menuMusic.play();
+    },
+    { once: true },
+  );
+};
 restartBtn.addEventListener("click", () => {
   keys.a.pressed = false;
   keys.d.pressed = false;
