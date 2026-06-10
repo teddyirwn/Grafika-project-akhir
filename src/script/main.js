@@ -10,6 +10,7 @@ const ctx = canvas.getContext("2d");
 const startScene = document.getElementById("start-scene");
 const battleScene = document.getElementById("battle-scene");
 const startBtn = document.getElementById("start-btn");
+const restartBtn = document.getElementById("restart-btn");
 
 // --- INISIALISASI HEALTH BAR ---
 const player1Health = document.getElementById("player1-health");
@@ -239,6 +240,16 @@ startBtn.addEventListener("click", () => {
   animate();
 });
 
+restartBtn.addEventListener("click", () => {
+  keys.a.pressed = false;
+  keys.d.pressed = false;
+  keys.j.pressed = false;
+  keys.l.pressed = false;
+  lastKeyP1 = "";
+  lastKeyP2 = "";
+  resetGame();
+});
+
 window.addEventListener("keydown", (event) => {
   console.log("KEY:", event.key);
 
@@ -322,6 +333,26 @@ function Serangan({ attacker, victim }) {
 }
 
 // fungsi untuk mengecek pemenang
+function resetGame() {
+  player1.position = { x: 80, y: 0 };
+  player2.position = { x: 1230, y: 0 };
+  player1.velocity = { x: 0, y: 0 };
+  player2.velocity = { x: 0, y: 0 };
+  player1.health = 100;
+  player2.health = 100;
+  player1.dead = false;
+  player2.dead = false;
+  player1.isAttacking = false;
+  player2.isAttacking = false;
+  player1.facing = "right";
+  player2.facing = "left";
+  player1.switchSprite("idle");
+  player2.switchSprite("idle");
+  player1Health.style.width = "100%";
+  player2Health.style.width = "100%";
+  document.querySelector("#game-over-screen").style.display = "none";
+}
+
 function winnerCheck({ player1, player2 }) {
   const screen = document.querySelector("#game-over-screen");
   const text = document.querySelector("#winner-text");
