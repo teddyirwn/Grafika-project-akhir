@@ -185,13 +185,18 @@ body {
   margin-bottom: 15px;
 }
 
-.foto {
-  background-color: #8acbd0;
+.foto, .foto1 {
+  /* background-color: blue; */
   width: 45px;
   height: 45px;
   border-radius: 10px;
+  border-color: #000;
   flex-shrink: 0;
+  object-fit: cover;
+  border: 2px solid #ddd;
 }
+
+
 
 .info h4 {
   font-size: 18px;
