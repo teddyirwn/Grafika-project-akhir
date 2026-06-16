@@ -345,7 +345,7 @@ function Serangan({ attacker, victim }) {
 // fungsi untuk mengecek pemenang
 function resetGame() {
   player1.position = { x: 80, y: 0 };
-  player2.position = { x: 1230, y: 0 };
+  player2.position = { x: 1080, y: 0 };
   player1.velocity = { x: 0, y: 0 };
   player2.velocity = { x: 0, y: 0 };
   player1.health = 100;
