@@ -2,15 +2,29 @@ import "../style/style.css";
 import { CONFIG } from "../data/config";
 import { Fighter } from "../class/Fighter";
 import { Sprite } from "../class/Sprite";
+import "./auth.js";
 
 const canvas = document.getElementById("arena");
-const ctx = canvas.getContext("2d");
+let ctx = null;
+if (!canvas) {
+  console.error("Canvas #arena not found in DOM");
+} else {
+  ctx = canvas.getContext("2d");
+}
 
 // --- INISIALISASI DOM (SCENE MANAGER) ---
 const startScene = document.getElementById("start-scene");
 const battleScene = document.getElementById("battle-scene");
 const startBtn = document.getElementById("start-btn");
 const restartBtn = document.getElementById("restart-btn");
+const startOnlineBtn = document.getElementById("start-online-btn");
+
+// AUTH / LOBBY
+const authScene = document.getElementById("auth-scene");
+const lobbyScene = document.getElementById("lobby-scene");
+const lobbyUsername = document.getElementById("lobby-username");
+const lobbyPlayers = document.getElementById("lobby-players");
+const lobbyStartBtn = document.getElementById("lobby-start-btn");
 
 // --- INISIALISASI HEALTH BAR ---
 const player1Health = document.getElementById("player1-health");
@@ -224,7 +238,9 @@ function animate() {
 }
 
 // --- EVENT LISTENERS ---
-startBtn.addEventListener("click", () => {
+if (!startBtn) console.error("start-btn element not found");
+startBtn?.addEventListener("click", () => {
+  console.log("Start button clicked - beginning start handler");
   // Update Nama
   const p1Name = document.getElementById("p1-name-input").value || "Samurai";
   const p2Name = document.getElementById("p2-name-input").value || "Shinobi";
@@ -236,9 +252,31 @@ startBtn.addEventListener("click", () => {
   battleScene.style.display = "flex";
 
   // Jalankan BGM & Game
-  backgroundMusic.play();
-  menuMusic.pause();
-  animate();
+  try {
+    backgroundMusic.play();
+  } catch (err) {
+    console.warn("backgroundMusic.play() failed:", err);
+  }
+  try {
+    menuMusic.pause();
+  } catch (err) {
+    /* ignore */
+  }
+
+  try {
+    if (!ctx) ctx = canvas.getContext("2d");
+    animate();
+    console.log("Game animation started");
+  } catch (err) {
+    console.error("Failed to start animate():", err);
+  }
+});
+
+// START ONLINE NAVIGATION (show auth -> lobby)
+startOnlineBtn?.addEventListener("click", () => {
+  // show auth scene
+  startScene.style.display = "none";
+  authScene.style.display = "block";
 });
 
 window.onload = () => {
