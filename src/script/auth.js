@@ -12,25 +12,18 @@
 import { supabase } from "../lib/supabase.js";
 
 // ── DOM refs ──────────────────────────────────────────────────────────────────
-const authScene     = document.getElementById("auth-scene");
-const loginForm     = document.getElementById("login-form");
-const signupForm    = document.getElementById("signup-form");
-// Minimal client-side flow handling for auth -> menu -> create/join room (UI-only)
-
-// Elements
 const authScene = document.getElementById("auth-scene");
 const loginForm = document.getElementById("login-form");
 const signupForm = document.getElementById("signup-form");
 const authToggleLink = document.getElementById("auth-toggle-link");
 const authModeLabel = document.getElementById("auth-mode");
-const authError     = document.getElementById("auth-error");
-const authSuccess   = document.getElementById("auth-success");
+const authError = document.getElementById("auth-error");
+const authSuccess = document.getElementById("auth-success");
 
 const menuScene = document.getElementById("menu-scene");
 const createScene = document.getElementById("create-scene");
-const joinScene    = document.getElementById("join-scene");
+const joinScene = document.getElementById("join-scene");
 const createPlayers = document.getElementById("create-players");
-const joinPlayers  = document.getElementById("join-players");
 const inviteCodeInput = document.getElementById("invite-code");
 const copyInviteBtn = document.getElementById("copy-invite");
 const simulateJoinBtn = document.getElementById("simulate-join");
@@ -49,10 +42,10 @@ const joinBtn = document.getElementById("join-btn");
 const battleScene = document.getElementById("battle-scene");
 
 // ── State ────────────────────────────────────────────────────────────────────
-let currentUser   = null;   // Supabase User object
-let currentProfile = null;  // row from public.profiles
-let players       = [];     // [{name, id}]  in current lobby
-let inviteCode    = null;
+let currentUser = null; // Supabase User object
+let currentProfile = null; // row from public.profiles
+let players = []; // [{name, id}]  in current lobby
+let inviteCode = null;
 
 // ── Utility: show / hide feedback messages ────────────────────────────────────
 function showError(msg) {
@@ -84,15 +77,15 @@ function setLoading(btn, loading) {
 function setAuthMode(mode) {
   clearMessages();
   if (mode === "signup") {
-    loginForm.style.display  = "none";
+    loginForm.style.display = "none";
     signupForm.style.display = "block";
-    if (authModeLabel)   authModeLabel.innerText   = "Sign Up";
-    if (authToggleLink)  authToggleLink.innerText  = "Click here to login.";
+    if (authModeLabel) authModeLabel.innerText = "Sign Up";
+    if (authToggleLink) authToggleLink.innerText = "Click here to login.";
   } else {
-    loginForm.style.display  = "block";
+    loginForm.style.display = "block";
     signupForm.style.display = "none";
-    if (authModeLabel)   authModeLabel.innerText   = "Sign In";
-    if (authToggleLink)  authToggleLink.innerText  = "Click here to register.";
+    if (authModeLabel) authModeLabel.innerText = "Sign In";
+    if (authToggleLink) authToggleLink.innerText = "Click here to register.";
   }
 }
 
@@ -108,7 +101,7 @@ setAuthMode("login");
 // ── LOGIN ─────────────────────────────────────────────────────────────────────
 document.getElementById("login-btn")?.addEventListener("click", async () => {
   clearMessages();
-  const email    = document.getElementById("login-email")?.value?.trim();
+  const email = document.getElementById("login-email")?.value?.trim();
   const password = document.getElementById("login-password")?.value;
 
   if (!email || !password) {
@@ -119,7 +112,10 @@ document.getElementById("login-btn")?.addEventListener("click", async () => {
   const loginBtn = document.getElementById("login-btn");
   setLoading(loginBtn, true);
 
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
 
   setLoading(loginBtn, false);
 
@@ -154,7 +150,7 @@ document.getElementById("forgot-link")?.addEventListener("click", async (e) => {
 document.getElementById("signup-btn")?.addEventListener("click", async () => {
   clearMessages();
   const username = document.getElementById("signup-username")?.value?.trim();
-  const email    = document.getElementById("signup-email")?.value?.trim();
+  const email = document.getElementById("signup-email")?.value?.trim();
   const password = document.getElementById("signup-password")?.value;
 
   if (!username || !email || !password) {
@@ -198,7 +194,9 @@ document.getElementById("signup-btn")?.addEventListener("click", async () => {
     await handleSession(data.user);
   } else {
     setLoading(signupBtn, false);
-    showSuccess("Registration successful! Check your email to confirm your account.");
+    showSuccess(
+      "Registration successful! Check your email to confirm your account.",
+    );
     setAuthMode("login");
   }
 });
@@ -237,10 +235,8 @@ async function fetchProfile(userId) {
 async function handleSession(user) {
   currentUser = user;
 
-  // Try to load username from profiles table
   const profile = await fetchProfile(user.id);
 
-  // Fallback: username stored in auth metadata (set during signUp)
   const username =
     profile?.username ||
     user.user_metadata?.username ||
@@ -249,62 +245,63 @@ async function handleSession(user) {
 
   currentProfile = { username };
 
-  // Hide auth, show lobby
-loginBtn?.addEventListener("click", () => {
-  const username = document.getElementById("login-username").value || "Player";
-  loginSuccess(username);
-});
+  // Update UI after login
+  if (authScene) authScene.style.display = "none";
+  if (menuScene) menuScene.style.display = "flex";
+  if (createUsername) createUsername.innerText = username;
+  if (joinUsername) joinUsername.innerText = username;
+}
 
-signupBtn?.addEventListener("click", () => {
-  const username = document.getElementById("signup-username").value || "Player";
-  signupSuccess(username);
-});
+// ── Menu Navigation ───────────────────────────────────────────────────────────
 
 createBtn?.addEventListener("click", () => {
-  menuScene.style.display = "none";
-  createScene.style.display = "flex";
+  if (menuScene) menuScene.style.display = "none";
+  if (createScene) createScene.style.display = "flex";
 
-  // generate invite code and set into input
   inviteCode = genInviteCode();
   if (inviteCodeInput) inviteCodeInput.value = inviteCode;
 
-  // reset players and add current user as host
   players = [];
-  if (currentUser) players.push({ name: currentUser, id: "me" });
-  else players.push({ name: "Player_1", id: "me" });
+  if (currentUser) {
+    players.push({
+      name: currentProfile?.username || "Player",
+      id: currentUser.id,
+    });
+  } else {
+    players.push({ name: "Player_1", id: "me" });
+  }
 
-  renderPlayers();
+  renderPlayersCreate();
   updateStartButton();
 });
 
 joinBtn?.addEventListener("click", () => {
-  menuScene.style.display = "none";
-  joinScene.style.display = "flex";
+  if (menuScene) menuScene.style.display = "none";
+  if (joinScene) joinScene.style.display = "flex";
 });
 
-logoutBtn?.addEventListener("click", () => {
-  menuScene.style.display = "none";
-  authScene.style.display = "flex";
-  setAuthMode("login");
+logoutBtn?.addEventListener("click", async () => {
+  const { error } = await supabase.auth.signOut();
+  if (error) console.warn("[auth] signOut error:", error.message);
 });
 
 createBackBtn?.addEventListener("click", () => {
-  createScene.style.display = "none";
-  menuScene.style.display = "flex";
+  if (createScene) createScene.style.display = "none";
+  if (menuScene) menuScene.style.display = "flex";
 });
 
 joinBackBtn?.addEventListener("click", () => {
-  joinScene.style.display = "none";
-  menuScene.style.display = "flex";
+  if (joinScene) joinScene.style.display = "none";
+  if (menuScene) menuScene.style.display = "flex";
 });
 
+// ── Lobby Start ───────────────────────────────────────────────────────────────
+
 createStartBtn?.addEventListener("click", () => {
-  // ensure at least two players (add CPU if needed for local start)
   if (players.length < 2) {
     players.push({ name: "CPU", id: "cpu" });
   }
 
-  // set display names in battle scene
   const p1 = players[0]?.name || "Player 1";
   const p2 = players[1]?.name || "Player 2";
   const disp1 = document.getElementById("display-p1-name");
@@ -312,11 +309,9 @@ createStartBtn?.addEventListener("click", () => {
   if (disp1) disp1.innerText = p1;
   if (disp2) disp2.innerText = p2;
 
-  // show battle scene
-  createScene.style.display = "none";
+  if (createScene) createScene.style.display = "none";
   if (battleScene) battleScene.style.display = "flex";
 
-  // trigger global startGame if available (starts animation/audio)
   if (window.startGame) window.startGame();
 });
 
@@ -324,58 +319,29 @@ joinRoomBtn?.addEventListener("click", () => {
   const code = joinCodeInput?.value?.trim();
   if (!code) return alert("Enter invite code");
   alert("Joined room: " + code + " (UI mock)");
-  document.getElementById("join-ready-btn").disabled = false;
+  const btn = document.getElementById("join-ready-btn");
+  if (btn) btn.disabled = false;
 });
 
-function loginSuccess(username) {
-  currentUser = username;
-  authScene.style.display = "none";
-  lobbyScene.style.display = "flex";
-  document.getElementById("lobby-username").innerText = username;
+// ── Invite code system ────────────────────────────────────────────────────────
 
-  // Generate invite code
-  inviteCode = genInviteCode();
-  if (inviteCodeInput) inviteCodeInput.value = inviteCode;
-
-  players = [{ name: username, id: user.id }];
-  renderPlayers();
-  updateStartButton();
-  menuScene.style.display = "flex";
-  if (createUsername) createUsername.innerText = currentUser;
-  if (joinUsername) joinUsername.innerText = currentUser;
-}
-
-// ── Supabase auth state listener (restores session on page reload) ─────────────
-supabase.auth.onAuthStateChange(async (event, session) => {
-  if (event === "SIGNED_IN" && session?.user && !currentUser) {
-    await handleSession(session.user);
-  }
-  if (event === "SIGNED_OUT") {
-    currentUser    = null;
-    currentProfile = null;
-    players        = [];
-    inviteCode     = null;
-    lobbyScene.style.display = "none";
-    authScene.style.display  = "block";
-    setAuthMode("login");
-  }
-});
-
-// ── Invite code ───────────────────────────────────────────────────────────────
 function genInviteCode() {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
-function signupSuccess(username) {
-  loginSuccess(username);
 }
 
-function renderPlayers() {
+function renderPlayersCreate() {
   if (!createPlayers) return;
   createPlayers.innerHTML = "";
   players.forEach((p) => {
     const li = document.createElement("li");
-    li.innerText = p.name + (p.id === "me" ? " (you)" : "");
+    const suffix = p.id === currentUser?.id ? " (you)" : "";
+    li.innerText = p.name + suffix;
     createPlayers.appendChild(li);
   });
+}
+
+function updateStartButton() {
+  if (createStartBtn) createStartBtn.disabled = players.length < 2;
 }
 
 copyInviteBtn?.addEventListener("click", () => {
@@ -385,70 +351,31 @@ copyInviteBtn?.addEventListener("click", () => {
   });
 });
 
-// ── Lobby UI ──────────────────────────────────────────────────────────────────
-function renderPlayers() {
-  if (!lobbyPlayers) return;
-  lobbyPlayers.innerHTML = "";
-  players.forEach((p) => {
-    const li = document.createElement("li");
-    li.textContent = p.name + (p.id === currentUser?.id ? " (you)" : "");
-    lobbyPlayers.appendChild(li);
-  });
-}
-
-function updateStartButton() {
-  if (lobbyStartBtn) lobbyStartBtn.disabled = players.length < 2;
-}
-
-// Simulate a second player joining (local only — for testing)
 simulateJoinBtn?.addEventListener("click", () => {
   const other = {
     name: "Player_" + Math.floor(Math.random() * 1000),
     id: "sim_" + Date.now(),
   };
-  const other = { name: "Player_" + Math.floor(Math.random() * 1000), id: Date.now() };
   players.push(other);
-  renderPlayers();
+  renderPlayersCreate();
   updateStartButton();
 });
 
-// Join by invite code (UI-only check for now; extend with DB lookup if needed)
-document.getElementById("join-code-btn")?.addEventListener("click", () => {
-  const code = document.getElementById("join-code-input")?.value?.trim();
-  if (!code) return alert("Enter an invite code first.");
-  if (code === inviteCode) {
-    const other = { name: "Friend", id: "join_" + Date.now() };
-    players.push(other);
-    renderPlayers();
-    updateStartButton();
-  } else {
-    alert("Invite code not found.");
+// ── Supabase auth state listener ──────────────────────────────────────────────
+
+supabase.auth.onAuthStateChange(async (event, session) => {
+  if (event === "SIGNED_IN" && session?.user && !currentUser) {
+    await handleSession(session.user);
+  }
+  if (event === "SIGNED_OUT") {
+    currentUser = null;
+    currentProfile = null;
+    players = [];
+    inviteCode = null;
+    if (menuScene) menuScene.style.display = "none";
+    if (authScene) authScene.style.display = "flex";
+    setAuthMode("login");
   }
 });
-
-// ── Start game from lobby ─────────────────────────────────────────────────────
-lobbyStartBtn?.addEventListener("click", () => {
-  const p1Input = document.getElementById("p1-name-input");
-  const p2Input = document.getElementById("p2-name-input");
-  if (p1Input) p1Input.value = players[0]?.name || "Player 1";
-  if (p2Input) p2Input.value = players[1]?.name || "Player 2";
-
-  document.getElementById("lobby-scene").style.display = "none";
-  document.getElementById("start-scene").style.display = "flex";
-  document.getElementById("start-btn")?.click();
-});
-
-// ── Logout ────────────────────────────────────────────────────────────────────
-document.getElementById("leave-lobby")?.addEventListener("click", async () => {
-  const { error } = await supabase.auth.signOut();
-  if (error) console.warn("[auth] signOut error:", error.message);
-  // onAuthStateChange handles the rest
-});
-
-function updateStartButton() {
-  const btn = document.getElementById("create-start-btn");
-  if (!btn) return;
-  btn.disabled = players.length < 2;
-}
 
 export {};

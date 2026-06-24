@@ -15,7 +15,7 @@ if (!canvas) {
 // --- INISIALISASI DOM (SCENE MANAGER) ---
 const startScene = document.getElementById("start-scene");
 const battleScene = document.getElementById("battle-scene");
-const startBtn = document.getElementById("start-btn");
+// const startBtn = document.getElementById("start-btn");
 const restartBtn = document.getElementById("restart-btn");
 const startOnlineBtn = document.getElementById("start-online-btn");
 
@@ -244,14 +244,20 @@ function animate() {
 }
 
 // --- EVENT LISTENERS ---
-if (!startBtn) console.error("start-btn element not found");
+// if (!startBtn) console.error("start-btn element not found");
 function startGame() {
   console.log("startGame() invoked");
   // Update Nama (if start scene inputs exist)
   const p1NameInput = document.getElementById("p1-name-input");
   const p2NameInput = document.getElementById("p2-name-input");
-  const p1Name = (p1NameInput && p1NameInput.value) || document.getElementById("display-p1-name").innerText || "Samurai";
-  const p2Name = (p2NameInput && p2NameInput.value) || document.getElementById("display-p2-name").innerText || "Shinobi";
+  const p1Name =
+    (p1NameInput && p1NameInput.value) ||
+    document.getElementById("display-p1-name").innerText ||
+    "Samurai";
+  const p2Name =
+    (p2NameInput && p2NameInput.value) ||
+    document.getElementById("display-p2-name").innerText ||
+    "Shinobi";
   const disp1El = document.getElementById("display-p1-name");
   const disp2El = document.getElementById("display-p2-name");
   if (disp1El) disp1El.innerText = p1Name;
