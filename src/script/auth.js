@@ -451,4 +451,4 @@ function updateStartButton() {
   btn.disabled = players.length < 2;
 }
 
-
+export {};
