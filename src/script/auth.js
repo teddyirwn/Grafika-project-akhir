@@ -35,6 +35,7 @@ const joinBackBtn = document.getElementById("join-back-btn");
 const logoutBtn = document.getElementById("logout-btn");
 const createUsername = document.getElementById("create-username");
 const joinUsername = document.getElementById("join-username");
+const joinPlayers = document.getElementById("join-players");
 const loginBtn = document.getElementById("login-btn");
 const signupBtn = document.getElementById("signup-btn");
 const createBtn = document.getElementById("create-btn");
@@ -244,7 +245,6 @@ async function handleSession(user) {
     "Player";
 
   currentProfile = { username };
-}
 
   // Update UI after login
   if (authScene) authScene.style.display = "none";
@@ -252,6 +252,7 @@ async function handleSession(user) {
   if (createUsername) createUsername.innerText = username;
   if (joinUsername) joinUsername.innerText = username;
 }
+
 
 // ── Menu Navigation ───────────────────────────────────────────────────────────
 
@@ -327,13 +328,7 @@ joinRoomBtn?.addEventListener("click", () => {
 // ── Invite code system ────────────────────────────────────────────────────────
 
 function genInviteCode() {
-<<<<<<< HEAD
   return Math.random().toString(36).substring(2, 8).toUpperCase();
-=======
-  return Math.random().toString(36).substring(2, 8).toUpperCase();}
-function signupSuccess(username) {
-  loginSuccess(username);
->>>>>>> 08b74eaf112f04fce5746e234835cd7e5d5e6aee
 }
 
 function renderPlayersCreate() {
@@ -385,20 +380,6 @@ supabase.auth.onAuthStateChange(async (event, session) => {
   }
 });
 
-<<<<<<< HEAD
-=======
-// ── Start game from lobby ─────────────────────────────────────────────────────
-lobbyStartBtn?.addEventListener("click", () => {
-  const p1Input = document.getElementById("p1-name-input");
-  const p2Input = document.getElementById("p2-name-input");
-  if (p1Input) p1Input.value = players[0]?.name || "Player 1";
-  if (p2Input) p2Input.value = players[1]?.name || "Player 2";
-
-  document.getElementById("lobby-scene").style.display = "none";
-  document.getElementById("start-scene").style.display = "flex";
-  document.getElementById("start-btn")?.click();
-});
-
 // ── Logout ────────────────────────────────────────────────────────────────────
 document.getElementById("leave-lobby")?.addEventListener("click", () => {
   // Local leave: clear lobby state and return to auth scene
@@ -414,11 +395,4 @@ document.getElementById("leave-lobby")?.addEventListener("click", () => {
   currentUser = null;
 });
 
-function updateStartButton() {
-  const btn = document.getElementById("create-start-btn");
-  if (!btn) return;
-  btn.disabled = players.length < 2;
-}
-
->>>>>>> 08b74eaf112f04fce5746e234835cd7e5d5e6aee
 export {};
