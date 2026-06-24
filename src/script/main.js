@@ -84,7 +84,7 @@ const player1 = new Fighter({
 const player2 = new Fighter({
   position: { x: 1080, y: 0 },
   velocity: { x: 0, y: 0 },
-  offset: { x: 100, y: 0 },
+  offset: { x: 0, y: 0 },
   color: "blue",
   imageSrc: "/asset/characters/Shinobi/Idle.png",
   framesMax: 6,
@@ -136,32 +136,38 @@ function animate() {
 
   // logic Untuk mengecek benturan serangan
   // PLAYER 1 MENYERANG PLAYER 2
+  // DI DALAM FUNGSI ANIMATE()
+
+  // PLAYER 1 MENYERANG PLAYER 2
   if (
-    Serangan({
-      attacker: player1,
-      victim: player2,
-    }) &&
-    player1.isAttacking
+    Serangan({ attacker: player1, victim: player2 }) &&
+    player1.isAttacking &&
+    player1.frameCurrent === 3 // Menyerang hanya aktif di frame ke-4 (index 3)
   ) {
     player2.takeHit();
-    player1.isAttacking = false;
+    player1.isAttacking = false; // langsung matikan agar tidak hit berkali-kali di frame yang sama
     player2Health.style.width = player2.health + "%";
   }
 
   // PLAYER 2 MENYERANG PLAYER 1
   if (
-    Serangan({
-      attacker: player2,
-      victim: player1,
-    }) &&
-    player2.isAttacking
+    Serangan({ attacker: player2, victim: player1 }) &&
+    player2.isAttacking &&
+    player2.frameCurrent === 2 // Menyerang hanya aktif di frame ke-3 (index 2) sesuai isi sprite Shinobi
   ) {
     player1.takeHit();
-    player2.isAttacking = false;
+    player2.isAttacking = false; // langsung matikan
     player1Health.style.width = player1.health + "%";
   }
   // LOGIKA GERAK PLAYER 1
   if (!player1.dead) {
+    if (player1.position.x < player2.position.x) {
+      player1.facing = "right";
+      player2.facing = "left";
+    } else {
+      player1.facing = "left";
+      player2.facing = "right";
+    }
     player1.velocity.x = 0;
     if (keys.d.pressed && lastKeyP1 === "d") {
       player1.velocity.x = 3;
@@ -329,14 +335,14 @@ window.addEventListener("keyup", (event) => {
 
 // fungsi untuk mengecek benturan serangan
 function Serangan({ attacker, victim }) {
-  const victimWidth = (victim.image.width / victim.framesMax) * victim.scale;
-  const victimHeight = victim.image.height * victim.scale;
+  // const victimWidth = (victim.image.width / victim.framesMax) * victim.scale;
+  // const victimHeight = victim.image.height * victim.scale;
 
   return (
-    attacker.attackBox.position.x < victim.position.x + victimWidth &&
+    attacker.attackBox.position.x < victim.position.x + victim.width &&
     attacker.attackBox.position.x + attacker.attackBox.width >
       victim.position.x &&
-    attacker.attackBox.position.y < victim.position.y + victimHeight &&
+    attacker.attackBox.position.y < victim.position.y + victim.height &&
     attacker.attackBox.position.y + attacker.attackBox.height >
       victim.position.y
   );
