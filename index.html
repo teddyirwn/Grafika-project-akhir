@@ -15,22 +15,26 @@
 
         <p class="auth-note">Not registered yet? <a href="#" id="auth-toggle-link">Click here</a></p>
 
+        <!-- Global auth feedback -->
+        <p id="auth-error" class="auth-msg auth-msg--error" style="display:none"></p>
+        <p id="auth-success" class="auth-msg auth-msg--success" style="display:none"></p>
+
         <form id="login-form" class="auth-form" style="display:block">
-          <input class="pill-input" id="login-username" placeholder="Username" required>
-          <input class="pill-input" id="login-password" type="password" placeholder="Password" required>
+          <input class="pill-input" id="login-email" type="email" placeholder="Email" required />
+          <input class="pill-input" id="login-password" type="password" placeholder="Password" required />
 
           <div class="auth-remember-row">
             <label><input type="checkbox" id="remember-me" /> Remember Me</label>
-            <a href="#" class="forgot-link">Forgot Password?</a>
+            <a href="#" class="forgot-link" id="forgot-link">Forgot Password?</a>
           </div>
 
           <button type="button" id="login-btn" class="auth-cta">Sign in</button>
         </form>
 
         <form id="signup-form" class="auth-form" style="display:none">
-          <input class="pill-input" id="signup-email" placeholder="Email" />
-          <input class="pill-input" id="signup-username" placeholder="Username" />
-          <input class="pill-input" id="signup-password" type="password" placeholder="Password" />
+          <input class="pill-input" id="signup-username" placeholder="Username (shown in-game)" maxlength="12" required />
+          <input class="pill-input" id="signup-email" type="email" placeholder="Email" required />
+          <input class="pill-input" id="signup-password" type="password" placeholder="Password (min 6 chars)" required />
           <p class="auth-small">By registering, you agree to our terms.</p>
           <button type="button" id="signup-btn" class="auth-cta">Sign up</button>
         </form>
@@ -50,37 +54,7 @@
       </div>
     </div>
 
-    <!-- AUTH MODAL -->
-    <div id="auth-modal" class="modal" style="display:none">
-      <div class="modal-card">
-        <div class="auth-tabs">
-          <button id="tab-signin" class="active">Sign in</button>
-          <button id="tab-signup">Sign up</button>
-        </div>
-
-        <form id="signin-form" class="auth-form">
-          <label>Email</label>
-          <input type="email" id="signin-email" placeholder="you@example.com" />
-          <label>Password</label>
-          <input type="password" id="signin-password" />
-          <button type="button" id="signin-submit">Sign in</button>
-        </form>
-
-        <form id="signup-form" class="auth-form" style="display:none">
-          <label>Username</label>
-          <input type="text" id="signup-username" maxlength="12" />
-          <label>Email</label>
-          <input type="email" id="signup-email" />
-          <label>Password</label>
-          <input type="password" id="signup-password" />
-          <button type="button" id="signup-submit">Sign up</button>
-        </form>
-
-        <button id="auth-close">Close</button>
-      </div>
-    </div>
-
-    <!-- LOBBY SCENE (single instance below) -->
+    <!-- LOBBY SCENE -->
 
     <div id="create-scene" style="display: none">
       <div class="lobby-card">
@@ -93,6 +67,12 @@
         </div>
 
         <h4>Players</h4>
+        <ul id="lobby-players"></ul>
+        <div id="join-code-row" style="display:flex;gap:8px;margin-top:8px;">
+          <input id="join-code-input" class="pill-input" placeholder="Enter invite code" />
+          <button id="join-code-btn">Join</button>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:8px;">
         <ul id="create-players">
           <li>Waiting for players...</li>
         </ul>
@@ -123,6 +103,7 @@
 
         <div class="section-row">
           <button id="join-ready-btn" disabled>Ready</button>
+          <button id="leave-lobby" style="margin-left:auto">Logout</button>
         </div>
 
         <button id="join-back-btn" class="auth-cta auth-cta--secondary">Back</button>
