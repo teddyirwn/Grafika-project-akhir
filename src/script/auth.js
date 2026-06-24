@@ -248,6 +248,7 @@ async function handleSession(user) {
     "Player";
 
   currentProfile = { username };
+}
 
   // Hide auth, show lobby
 loginBtn?.addEventListener("click", () => {
@@ -363,7 +364,7 @@ supabase.auth.onAuthStateChange(async (event, session) => {
 
 // ── Invite code ───────────────────────────────────────────────────────────────
 function genInviteCode() {
-  return Math.random().toString(36).substring(2, 8).toUpperCase();
+  return Math.random().toString(36).substring(2, 8).toUpperCase();}
 function signupSuccess(username) {
   loginSuccess(username);
 }
@@ -439,10 +440,18 @@ lobbyStartBtn?.addEventListener("click", () => {
 });
 
 // ── Logout ────────────────────────────────────────────────────────────────────
-document.getElementById("leave-lobby")?.addEventListener("click", async () => {
-  const { error } = await supabase.auth.signOut();
-  if (error) console.warn("[auth] signOut error:", error.message);
-  // onAuthStateChange handles the rest
+document.getElementById("leave-lobby")?.addEventListener("click", () => {
+  // Local leave: clear lobby state and return to auth scene
+  players = [];
+  inviteCode = null;
+  if (createPlayers) createPlayers.innerHTML = '<li>Waiting for players...</li>';
+  if (joinPlayers) joinPlayers.innerHTML = '<li>Waiting for host...</li>';
+  if (createScene) createScene.style.display = "none";
+  if (joinScene) joinScene.style.display = "none";
+  if (menuScene) menuScene.style.display = "none";
+  if (authScene) authScene.style.display = "flex";
+  setAuthMode("login");
+  currentUser = null;
 });
 
 function updateStartButton() {
