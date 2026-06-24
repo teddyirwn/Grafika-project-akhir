@@ -437,6 +437,17 @@ hr {
 .auth-cta:hover { background:#0b5a3e }
 .auth-small { font-size: 12px; color:#666; margin:10px 0 }
 
+/* Auth feedback messages */
+.auth-msg {
+  border-radius: 8px;
+  padding: 9px 14px;
+  font-size: 0.88rem;
+  margin: 6px 0 10px 0;
+  text-align: left;
+}
+.auth-msg--error   { background: #ffe5e5; color: #b00020; border: 1px solid #f5c2c2; }
+.auth-msg--success { background: #e6f9ef; color: #1a6e3e; border: 1px solid #b2e8cc; }
+
 /* smaller devices tweak */
 @media (max-width:420px) {
   .auth-card { padding: 20px }

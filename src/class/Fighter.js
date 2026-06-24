@@ -31,8 +31,8 @@ export class Fighter extends Sprite {
 
     this.attackBox = {
       position: { x: this.position.x, y: this.position.y },
-      width: 100,
-      height: 50,
+      width: 130,
+      height: 60,
     };
   }
 
@@ -40,7 +40,13 @@ export class Fighter extends Sprite {
     super.update(ctx);
 
     // gerakan attack box mengikuti posisi fighter
-    this.attackBox.position.x = this.position.x;
+    if (this.facing === "right") {
+      this.attackBox.position.x = this.position.x + this.width;
+    } else {
+      this.attackBox.position.x =
+        this.position.x + this.width - this.attackBox.width;
+    }
+
     this.attackBox.position.y = this.position.y;
 
     // update posisi fighter berdasarkan kecepatan
