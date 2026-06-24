@@ -1,4 +1,4 @@
-// Minimal client-side flow handling for auth -> lobby -> start (no socket.io yet)
+// Minimal client-side flow handling for auth -> menu -> create/join room (UI-only)
 
 // Elements
 const authScene = document.getElementById("auth-scene");
@@ -7,12 +7,27 @@ const signupForm = document.getElementById("signup-form");
 const authToggleLink = document.getElementById("auth-toggle-link");
 const authModeLabel = document.getElementById("auth-mode");
 
-const lobbyScene = document.getElementById("lobby-scene");
-const lobbyPlayers = document.getElementById("lobby-players");
+const menuScene = document.getElementById("menu-scene");
+const createScene = document.getElementById("create-scene");
+const joinScene = document.getElementById("join-scene");
+const createPlayers = document.getElementById("create-players");
+const joinPlayers = document.getElementById("join-players");
 const inviteCodeInput = document.getElementById("invite-code");
 const copyInviteBtn = document.getElementById("copy-invite");
 const simulateJoinBtn = document.getElementById("simulate-join");
-const lobbyStartBtn = document.getElementById("lobby-start-btn");
+const createStartBtn = document.getElementById("create-start-btn");
+const joinRoomBtn = document.getElementById("join-room-btn");
+const joinCodeInput = document.getElementById("join-code-input");
+const createBackBtn = document.getElementById("create-back-btn");
+const joinBackBtn = document.getElementById("join-back-btn");
+const logoutBtn = document.getElementById("logout-btn");
+const createUsername = document.getElementById("create-username");
+const joinUsername = document.getElementById("join-username");
+const loginBtn = document.getElementById("login-btn");
+const signupBtn = document.getElementById("signup-btn");
+const createBtn = document.getElementById("create-btn");
+const joinBtn = document.getElementById("join-btn");
+const battleScene = document.getElementById("battle-scene");
 
 let currentUser = null;
 let players = [];
@@ -22,7 +37,6 @@ function genInviteCode() {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
 }
 
-// Tab switches
 function setAuthMode(mode) {
   if (mode === "signup") {
     loginForm.style.display = "none";
@@ -43,49 +57,104 @@ authToggleLink?.addEventListener("click", (e) => {
   setAuthMode(isSignupVisible ? "login" : "signup");
 });
 
-// default
 setAuthMode("login");
 
-// Fake auth handlers
-document.getElementById("login-btn")?.addEventListener("click", () => {
+loginBtn?.addEventListener("click", () => {
   const username = document.getElementById("login-username").value || "Player";
   loginSuccess(username);
 });
 
-document.getElementById("signup-btn")?.addEventListener("click", () => {
+signupBtn?.addEventListener("click", () => {
   const username = document.getElementById("signup-username").value || "Player";
   signupSuccess(username);
 });
 
-function loginSuccess(username) {
-  currentUser = username;
-  // hide auth scene, show lobby
-  authScene.style.display = "none";
-  lobbyScene.style.display = "flex";
-  document.getElementById("lobby-username").innerText = currentUser;
+createBtn?.addEventListener("click", () => {
+  menuScene.style.display = "none";
+  createScene.style.display = "flex";
 
-  // create invite code and add current user to players
+  // generate invite code and set into input
   inviteCode = genInviteCode();
-  const icInput = document.getElementById("invite-code");
-  if (icInput) icInput.value = inviteCode;
+  if (inviteCodeInput) inviteCodeInput.value = inviteCode;
 
-  players = [{ name: currentUser, id: "me" }];
+  // reset players and add current user as host
+  players = [];
+  if (currentUser) players.push({ name: currentUser, id: "me" });
+  else players.push({ name: "Player_1", id: "me" });
+
   renderPlayers();
   updateStartButton();
+});
+
+joinBtn?.addEventListener("click", () => {
+  menuScene.style.display = "none";
+  joinScene.style.display = "flex";
+});
+
+logoutBtn?.addEventListener("click", () => {
+  menuScene.style.display = "none";
+  authScene.style.display = "flex";
+  setAuthMode("login");
+});
+
+createBackBtn?.addEventListener("click", () => {
+  createScene.style.display = "none";
+  menuScene.style.display = "flex";
+});
+
+joinBackBtn?.addEventListener("click", () => {
+  joinScene.style.display = "none";
+  menuScene.style.display = "flex";
+});
+
+createStartBtn?.addEventListener("click", () => {
+  // ensure at least two players (add CPU if needed for local start)
+  if (players.length < 2) {
+    players.push({ name: "CPU", id: "cpu" });
+  }
+
+  // set display names in battle scene
+  const p1 = players[0]?.name || "Player 1";
+  const p2 = players[1]?.name || "Player 2";
+  const disp1 = document.getElementById("display-p1-name");
+  const disp2 = document.getElementById("display-p2-name");
+  if (disp1) disp1.innerText = p1;
+  if (disp2) disp2.innerText = p2;
+
+  // show battle scene
+  createScene.style.display = "none";
+  if (battleScene) battleScene.style.display = "flex";
+
+  // trigger global startGame if available (starts animation/audio)
+  if (window.startGame) window.startGame();
+});
+
+joinRoomBtn?.addEventListener("click", () => {
+  const code = joinCodeInput?.value?.trim();
+  if (!code) return alert("Enter invite code");
+  alert("Joined room: " + code + " (UI mock)");
+  document.getElementById("join-ready-btn").disabled = false;
+});
+
+function loginSuccess(username) {
+  currentUser = username;
+  authScene.style.display = "none";
+  menuScene.style.display = "flex";
+  if (createUsername) createUsername.innerText = currentUser;
+  if (joinUsername) joinUsername.innerText = currentUser;
 }
 
 function signupSuccess(username) {
-  // For now same as login
   loginSuccess(username);
 }
 
 function renderPlayers() {
-  if (!lobbyPlayers) return;
-  lobbyPlayers.innerHTML = "";
+  if (!createPlayers) return;
+  createPlayers.innerHTML = "";
   players.forEach((p) => {
     const li = document.createElement("li");
     li.innerText = p.name + (p.id === "me" ? " (you)" : "");
-    lobbyPlayers.appendChild(li);
+    createPlayers.appendChild(li);
   });
 }
 
@@ -97,7 +166,6 @@ copyInviteBtn?.addEventListener("click", () => {
 });
 
 simulateJoinBtn?.addEventListener("click", () => {
-  // create fake other player
   const other = { name: "Player_" + Math.floor(Math.random() * 1000), id: Date.now() };
   players.push(other);
   renderPlayers();
@@ -105,50 +173,9 @@ simulateJoinBtn?.addEventListener("click", () => {
 });
 
 function updateStartButton() {
-  const btn = document.getElementById("lobby-start-btn");
-  if (players.length >= 2) btn.disabled = false;
-  else btn.disabled = true;
+  const btn = document.getElementById("create-start-btn");
+  if (!btn) return;
+  btn.disabled = players.length < 2;
 }
 
-// Start game from lobby (for now transfer to start-scene and then battle)
-document.getElementById("lobby-start-btn")?.addEventListener("click", () => {
-  // store player names into inputs for local game start
-  const p1Input = document.getElementById("p1-name-input");
-  const p2Input = document.getElementById("p2-name-input");
-  if (p1Input && p2Input) {
-    p1Input.value = players[0].name || "Player 1";
-    p2Input.value = players[1].name || "Player 2";
-  }
-
-  // show start scene and trigger start
-  document.getElementById("lobby-scene").style.display = "none";
-  document.getElementById("start-scene").style.display = "flex";
-  // emulate pressing start
-  document.getElementById("start-btn").click();
-});
-
-// Optional: join by code input
-document.getElementById("join-code-btn")?.addEventListener("click", () => {
-  const code = document.getElementById("join-code-input").value?.trim();
-  if (!code) return alert("Enter invite code");
-  // in this UI-only version, check against current inviteCode
-  if (code === inviteCode) {
-    const other = { name: "Friend", id: Date.now() };
-    players.push(other);
-    renderPlayers();
-    updateStartButton();
-  } else {
-    alert("Invite code not found (UI-only demo)");
-  }
-});
-
-// Leave lobby
-document.getElementById("leave-lobby")?.addEventListener("click", () => {
-  players = [];
-  inviteCode = null;
-  document.getElementById("lobby-scene").style.display = "none";
-  document.getElementById("auth-scene").style.display = "block";
-});
-
-// Lightweight defensive export to avoid module-top-level errors when imported multiple times
 export {};

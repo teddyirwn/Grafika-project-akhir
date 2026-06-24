@@ -270,8 +270,8 @@ hr {
   font-weight: bold;
 }
 
-/* AUTH & LOBBY UI */
-#auth-scene, #lobby-scene {
+/* AUTH & MENU & LOBBY UI */
+#auth-scene, #menu-scene, #create-scene, #join-scene {
   position: fixed;
   inset: 0;
   display: flex;
@@ -281,25 +281,74 @@ hr {
   z-index: 1000;
 }
 
-.auth-card, .lobby-card {
+.auth-card, .menu-card, .lobby-card {
   width: 380px;
+  max-width: calc(100% - 40px);
   background: white;
-  border-radius: 18px;
-  padding: 26px;
-  box-shadow: 0 18px 40px rgba(22, 31, 23, 0.06);
+  border-radius: 28px;
+  padding: 30px 28px;
+  box-shadow: 0 18px 40px rgba(22, 31, 23, 0.08);
   text-align: center;
 }
 
-.auth-card h2, .lobby-card h2 {
+.lobby-card {
+  width: 360px;
+  max-width: calc(100% - 40px);
+  background: #d8d8d8;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+  color: #1b1b1b;
+  padding: 28px 24px;
+  border-radius: 32px;
+}
+
+.lobby-card h2 {
+  font-size: 1.4rem;
+  margin-bottom: 10px;
+}
+
+.lobby-card p.lobby-status {
+  margin-bottom: 24px;
+  font-size: 0.98rem;
+}
+
+.menu-card {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.menu-card h1 {
+  margin: 0;
+  letter-spacing: 0.08em;
+  font-size: 2rem;
   color: #0b5a3e;
-  margin: 6px 0 12px 0;
-  font-size: 1.6rem;
+}
+
+.menu-card p {
+  margin: 0;
+  color: #5f6b6a;
+  font-size: 0.95rem;
+}
+
+.menu-card button {
+  width: 100%;
+}
+
+.auth-card h2, .lobby-card h2,
+.menu-card h1 {
+  color: #1b1b1b;
+}
+
+.auth-card h2, .lobby-card h2 {
+  margin: 6px 0 14px 0;
+  font-size: 1.75rem;
 }
 
 .auth-tabs {
   display: flex;
   gap: 8px;
   justify-content: center;
+  margin-bottom: 18px;
 }
 
 .auth-tabs button {
@@ -321,62 +370,131 @@ hr {
   margin: 8px 0;
 }
 
-.auth-card input {
+.auth-card input,
+.pill-input,
+.invite-row input,
+#join-code-input {
   width: 100%;
-  padding: 12px 14px;
+  padding: 14px 16px;
   border-radius: 30px;
   border: 1px solid #e6e6e6;
-  background: #f3f3f3;
+  background: #f6f6f6;
   outline: none;
-  font-size: 0.95rem;
+  font-size: 1rem;
+  box-sizing: border-box;
 }
 
-.auth-card input:focus {
-  box-shadow: 0 0 0 4px rgba(11, 90, 62, 0.06);
+.auth-card input:focus,
+.pill-input:focus,
+.invite-row input:focus,
+#join-code-input:focus {
+  box-shadow: 0 0 0 4px rgba(11, 90, 62, 0.08);
   background: #fff;
 }
 
-.auth-card button, .lobby-card button {
+.auth-card button, .lobby-card button, .menu-card button {
   background: #0b5a3e;
   color: white;
   border: none;
-  padding: 12px 18px;
-  border-radius: 12px;
+  padding: 14px 18px;
+  border-radius: 18px;
   cursor: pointer;
   font-weight: 700;
+  transition: background 0.25s ease, transform 0.2s ease;
 }
 
-.auth-card button:hover, .lobby-card button:hover {
+.auth-card button:hover, .lobby-card button:hover, .menu-card button:hover {
   background: #07472f;
+  transform: translateY(-1px);
+}
+
+.auth-cta--secondary,
+.menu-card .auth-cta--secondary,
+.lobby-card .auth-cta--secondary {
+  background: #f0f0f0;
+  color: #333;
+}
+
+.auth-cta--secondary:hover,
+.menu-card .auth-cta--secondary:hover,
+.lobby-card .auth-cta--secondary:hover {
+  background: #dedede;
 }
 
 .invite-row {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   align-items: center;
 }
 
-.invite-row input {
+.invite-row input,
+#join-code-input {
   flex: 1;
-  padding: 10px 12px;
-  border-radius: 10px;
-  border: 1px solid #e6e6e6;
-  background: #f6f6f6;
+  border-radius: 16px;
+  border: 1px solid #c4c4c4;
+  background: #f9f9f9;
+  color: #1b1b1b;
 }
 
-#lobby-players {
+.invite-row button,
+#join-room-btn,
+#create-start-btn,
+#join-ready-btn {
+  white-space: nowrap;
+  padding: 12px 18px;
+  border-radius: 16px;
+  min-width: 100px;
+}
+
+#create-players,
+#join-players {
   list-style: none;
   padding: 0;
-  margin: 8px 0 0 0;
+  margin: 12px 0 10px 0;
   text-align: left;
 }
 
-#lobby-players li {
-  padding: 10px 12px;
-  background: #fbfbfb;
-  border: 1px solid #f0f0f0;
-  margin-bottom: 8px;
-  border-radius: 8px;
+#create-players li,
+#join-players li {
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid #d4d4d4;
+  margin-bottom: 10px;
+  border-radius: 16px;
+}
+
+.lobby-card .section-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 18px;
+}
+
+.lobby-card h4,
+.lobby-card p.lobby-status,
+.lobby-card p.lobby-note {
+  margin: 8px 0;
+}
+
+.lobby-card h4 {
+  margin-top: 18px;
+  margin-bottom: 10px;
+  color: #1b1b1b;
+}
+
+.lobby-card p.lobby-status {
+  font-size: 0.95rem;
+  color: #333;
+}
+
+.lobby-card p.lobby-note {
+  font-size: 0.95rem;
+  color: #333;
+}
+
+.menu-card button + button {
+  margin-top: 8px;
 }
 
 /* smaller modal variant used earlier */

@@ -239,17 +239,21 @@ function animate() {
 
 // --- EVENT LISTENERS ---
 if (!startBtn) console.error("start-btn element not found");
-startBtn?.addEventListener("click", () => {
-  console.log("Start button clicked - beginning start handler");
-  // Update Nama
-  const p1Name = document.getElementById("p1-name-input").value || "Samurai";
-  const p2Name = document.getElementById("p2-name-input").value || "Shinobi";
-  document.getElementById("display-p1-name").innerText = p1Name;
-  document.getElementById("display-p2-name").innerText = p2Name;
+function startGame() {
+  console.log("startGame() invoked");
+  // Update Nama (if start scene inputs exist)
+  const p1NameInput = document.getElementById("p1-name-input");
+  const p2NameInput = document.getElementById("p2-name-input");
+  const p1Name = (p1NameInput && p1NameInput.value) || document.getElementById("display-p1-name").innerText || "Samurai";
+  const p2Name = (p2NameInput && p2NameInput.value) || document.getElementById("display-p2-name").innerText || "Shinobi";
+  const disp1El = document.getElementById("display-p1-name");
+  const disp2El = document.getElementById("display-p2-name");
+  if (disp1El) disp1El.innerText = p1Name;
+  if (disp2El) disp2El.innerText = p2Name;
 
   // Transisi Scene
-  startScene.style.display = "none";
-  battleScene.style.display = "flex";
+  if (startScene) startScene.style.display = "none";
+  if (battleScene) battleScene.style.display = "flex";
 
   // Jalankan BGM & Game
   try {
@@ -264,13 +268,18 @@ startBtn?.addEventListener("click", () => {
   }
 
   try {
-    if (!ctx) ctx = canvas.getContext("2d");
+    if (!ctx && canvas) ctx = canvas.getContext("2d");
     animate();
     console.log("Game animation started");
   } catch (err) {
     console.error("Failed to start animate():", err);
   }
-});
+}
+
+// expose to other modules/UI so lobby can trigger game start
+window.startGame = startGame;
+
+startBtn?.addEventListener("click", startGame);
 
 // START ONLINE NAVIGATION (show auth -> lobby)
 startOnlineBtn?.addEventListener("click", () => {

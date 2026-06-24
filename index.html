@@ -36,39 +36,17 @@
         </form>
       </div>
     </div>
-    <div id="start-scene" style="display:none">
-      <div class="start-card">
+
+    <div id="menu-scene" style="display:none" class="menu-card">
+      <div class="menu-top">
         <div class="logo-icon">⚔️</div>
         <h1>Arena Clash</h1>
-        <p>2 Player Battle Game</p>
-
-        <div class="input-group">
-          <div class="field">
-            <label for="p1-name-input">Player 1 Name</label>
-            <input
-              type="text"
-              id="p1-name-input"
-              placeholder="Samurai Name...."
-              maxlength="12"
-            />
-          </div>
-
-          <div class="vs-divider"><span>VS</span></div>
-
-          <div class="field">
-            <label for="p2-name-input">Player 2 Name</label>
-            <input
-              type="text"
-              id="p2-name-input"
-              placeholder="Shinobi Name...."
-              maxlength="12"
-            />
-          </div>
-        </div>
-
-        <button id="start-btn">START GAME</button>
-        <button id="start-online-btn">START ONLINE</button>
-        <p class="footer-text">Get your fingers ready for battle!</p>
+        <p>Choose your next step for the arena.</p>
+      </div>
+      <div class="menu-actions">
+        <button type="button" id="create-btn" class="auth-cta">Create Room</button>
+        <button type="button" id="join-btn" class="auth-cta">Join Room</button>
+        <button type="button" id="logout-btn" class="auth-cta auth-cta--secondary">Log Out</button>
       </div>
     </div>
 
@@ -104,20 +82,50 @@
 
     <!-- LOBBY SCENE (single instance below) -->
 
-    <div id="lobby-scene" style="display: none">
+    <div id="create-scene" style="display: none">
       <div class="lobby-card">
-        <h2>Lobby</h2>
-        <p>Logged in as: <span id="lobby-username">-</span></p>
+        <h2>Create Lobby</h2>
+        <p class="lobby-status">Logged As: <span id="create-username">-</span></p>
+
         <div class="invite-row">
-          <input id="invite-code" readonly />
+          <input id="invite-code" readonly placeholder="Invite Code" />
           <button id="copy-invite">Copy</button>
         </div>
+
         <h4>Players</h4>
-        <ul id="lobby-players"></ul>
-        <div style="display:flex;gap:8px;margin-top:8px;">
+        <ul id="create-players">
+          <li>Waiting for players...</li>
+        </ul>
+
+        <div class="section-row">
           <button id="simulate-join">Simulate Join</button>
-          <button id="lobby-start-btn" disabled>Start Game</button>
+          <button id="create-start-btn" disabled>Start Game</button>
         </div>
+
+        <button id="create-back-btn" class="auth-cta auth-cta--secondary">Back</button>
+      </div>
+    </div>
+
+    <div id="join-scene" style="display: none">
+      <div class="lobby-card">
+        <h2>Join Lobby</h2>
+        <p class="lobby-status">Logged As: <span id="join-username">-</span></p>
+
+        <div class="invite-row">
+          <input id="join-code-input" placeholder="Masukkan Invite Code" />
+          <button id="join-room-btn">Join</button>
+        </div>
+
+        <h4>Players</h4>
+        <ul id="join-players">
+          <li>Waiting for host...</li>
+        </ul>
+
+        <div class="section-row">
+          <button id="join-ready-btn" disabled>Ready</button>
+        </div>
+
+        <button id="join-back-btn" class="auth-cta auth-cta--secondary">Back</button>
       </div>
     </div>
 
