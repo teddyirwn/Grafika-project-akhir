@@ -224,38 +224,77 @@ copyInviteBtn?.addEventListener("click", () => {
     });
 });
 
-// Leaderboard
+// Leaderboard dengan pagination
 const leaderboardBtn = document.getElementById("leaderboard-btn");
 const leaderboardModal = document.getElementById("leaderboard-modal");
 const closeLeaderboardBtn = document.getElementById("close-leaderboard-btn");
 
+const LB_PAGE_SIZE = 5;
+let lbAllData = [];
+let lbCurrentPage = 0;
+
+function renderLeaderboardPage() {
+  const listEl = document.getElementById("leaderboard-list");
+  const pageInfo = document.getElementById("lb-page-info");
+  const prevBtn = document.getElementById("lb-prev-btn");
+  const nextBtn = document.getElementById("lb-next-btn");
+  if (!listEl) return;
+
+  const totalPages = Math.ceil(lbAllData.length / LB_PAGE_SIZE);
+  const start = lbCurrentPage * LB_PAGE_SIZE;
+  const pageData = lbAllData.slice(start, start + LB_PAGE_SIZE);
+  const medals = ["🥇", "🥈", "🥉"];
+
+  listEl.innerHTML = pageData
+    .map((p, i) => {
+      const globalIndex = start + i;
+      const isCurrentUser = p.username === currentProfile?.username;
+      const medal = medals[globalIndex] || `${globalIndex + 1}.`;
+      return `<div class="leaderboard-row${isCurrentUser ? " leaderboard-row--me" : ""}">
+        <span class="lb-rank">${medal}</span>
+        <span class="lb-username">${p.username}${isCurrentUser ? " (You)" : ""}</span>
+        <span class="lb-points">${p.points ?? 0} pts</span>
+      </div>`;
+    })
+    .join("");
+
+  if (pageInfo)
+    pageInfo.innerText = `Page ${lbCurrentPage + 1} / ${totalPages}`;
+  if (prevBtn) prevBtn.disabled = lbCurrentPage === 0;
+  if (nextBtn) nextBtn.disabled = lbCurrentPage >= totalPages - 1;
+
+  // Sembunyikan pagination jika data <= 1 halaman
+  const paginationEl = document.getElementById("lb-pagination");
+  if (paginationEl)
+    paginationEl.style.display = totalPages <= 1 ? "none" : "flex";
+}
+
 leaderboardBtn?.addEventListener("click", async () => {
   if (leaderboardModal) leaderboardModal.style.display = "flex";
+  lbCurrentPage = 0;
   const listEl = document.getElementById("leaderboard-list");
   if (listEl)
     listEl.innerHTML =
       "<p style='text-align:center; color:#888'>Loading...</p>";
 
-  // Try fetching with points, fallback to username only if points column missing
   let data, error;
   ({ data, error } = await supabase
     .from("profiles")
     .select("username, points")
     .order("points", { ascending: false })
-    .limit(10));
+    .limit(100));
 
   if (error) {
-    // Fallback: fetch only username if points column doesn't exist yet
     ({ data, error } = await supabase
       .from("profiles")
       .select("username")
-      .limit(10));
+      .limit(100));
     if (data) data = data.map((p) => ({ ...p, points: 0 }));
   }
 
   if (error || !data) {
     if (listEl)
-      listEl.innerHTML = `<p style='color:red; text-align:center'>Failed to load leaderboard.<br><small>${error?.message || ""}</small></p>`;
+      listEl.innerHTML = `<p style='color:red; text-align:center'>Failed to load.<br><small>${error?.message || ""}</small></p>`;
     return;
   }
 
@@ -263,21 +302,28 @@ leaderboardBtn?.addEventListener("click", async () => {
     if (listEl)
       listEl.innerHTML =
         "<p style='text-align:center; color:#888'>No players yet.</p>";
+    const paginationEl = document.getElementById("lb-pagination");
+    if (paginationEl) paginationEl.style.display = "none";
     return;
   }
 
-  const medals = ["🥇", "🥈", "🥉"];
-  listEl.innerHTML = data
-    .map((p, i) => {
-      const isCurrentUser = p.username === currentProfile?.username;
-      const medal = medals[i] || `${i + 1}.`;
-      return `<div class="leaderboard-row${isCurrentUser ? " leaderboard-row--me" : ""}">
-      <span class="lb-rank">${medal}</span>
-      <span class="lb-username">${p.username}${isCurrentUser ? " (You)" : ""}</span>
-      <span class="lb-points">${p.points ?? 0} pts</span>
-    </div>`;
-    })
-    .join("");
+  lbAllData = data;
+  renderLeaderboardPage();
+});
+
+document.getElementById("lb-prev-btn")?.addEventListener("click", () => {
+  if (lbCurrentPage > 0) {
+    lbCurrentPage--;
+    renderLeaderboardPage();
+  }
+});
+
+document.getElementById("lb-next-btn")?.addEventListener("click", () => {
+  const totalPages = Math.ceil(lbAllData.length / LB_PAGE_SIZE);
+  if (lbCurrentPage < totalPages - 1) {
+    lbCurrentPage++;
+    renderLeaderboardPage();
+  }
 });
 
 closeLeaderboardBtn?.addEventListener("click", () => {

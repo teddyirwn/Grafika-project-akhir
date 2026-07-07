@@ -58,6 +58,11 @@ let roundEnding = false; // Guard agar winnerCheck tidak dipanggil duplikat
 let player1Name = "Player 1";
 let player2Name = "Player 2";
 
+window.addEventListener("load", function () {
+  setTimeout(function () {
+    window.scrollTo(0, 1);
+  }, 0);
+});
 if (canvas) {
   canvas.width = CONFIG.canvasWidth;
   canvas.height = CONFIG.canvasHeight;
@@ -552,7 +557,8 @@ function getLocalPlayer() {
 function setJoystickKnobPos(dx, dy) {
   const cx = Math.max(-JOYSTICK_RADIUS, Math.min(JOYSTICK_RADIUS, dx));
   const cy = Math.max(-JOYSTICK_RADIUS, Math.min(JOYSTICK_RADIUS, dy));
-  joystickKnob.style.transform = "translate(calc(-50% + " + cx + "px), calc(-50% + " + cy + "px))";
+  joystickKnob.style.transform =
+    "translate(calc(-50% + " + cx + "px), calc(-50% + " + cy + "px))";
 }
 
 function resetJoystick() {
@@ -565,59 +571,96 @@ function resetJoystick() {
   joystickTouchId = null;
 }
 
-joystickBase?.addEventListener("touchstart", (e) => {
-  e.preventDefault();
-  if (!gameActive) return;
-  const touch = e.changedTouches[0];
-  joystickActive = true;
-  joystickTouchId = touch.identifier;
-  joystickStartX = touch.clientX;
-  joystickStartY = touch.clientY;
-}, { passive: false });
+joystickBase?.addEventListener(
+  "touchstart",
+  (e) => {
+    e.preventDefault();
+    if (!gameActive) return;
+    const touch = e.changedTouches[0];
+    joystickActive = true;
+    joystickTouchId = touch.identifier;
+    joystickStartX = touch.clientX;
+    joystickStartY = touch.clientY;
+  },
+  { passive: false },
+);
 
-joystickBase?.addEventListener("touchmove", (e) => {
-  e.preventDefault();
-  if (!joystickActive) return;
-  for (const touch of e.changedTouches) {
-    if (touch.identifier !== joystickTouchId) continue;
-    const dx = touch.clientX - joystickStartX;
-    const dy = touch.clientY - joystickStartY;
-    setJoystickKnobPos(dx, dy);
-    if (Math.abs(dx) > JOYSTICK_DEAD_ZONE) {
-      if (dx < 0) { keys.a.pressed = true; keys.d.pressed = false; lastKeyP1 = "a"; lastKeyP2 = "a"; }
-      else { keys.d.pressed = true; keys.a.pressed = false; lastKeyP1 = "d"; lastKeyP2 = "d"; }
-    } else { keys.a.pressed = false; keys.d.pressed = false; lastKeyP1 = ""; lastKeyP2 = ""; }
-    break;
-  }
-}, { passive: false });
-
-joystickBase?.addEventListener("touchend", (e) => {
-  e.preventDefault();
-  for (const touch of e.changedTouches) {
-    if (touch.identifier !== joystickTouchId) continue;
-    const dy = touch.clientY - joystickStartY;
-    if (dy < -JUMP_THRESHOLD) {
-      const p = getLocalPlayer();
-      if (p && p.velocity.y === 0) { p.velocity.y = -12; jumpSound.currentTime = 0; jumpSound.play().catch(() => {}); }
+joystickBase?.addEventListener(
+  "touchmove",
+  (e) => {
+    e.preventDefault();
+    if (!joystickActive) return;
+    for (const touch of e.changedTouches) {
+      if (touch.identifier !== joystickTouchId) continue;
+      const dx = touch.clientX - joystickStartX;
+      const dy = touch.clientY - joystickStartY;
+      setJoystickKnobPos(dx, dy);
+      if (Math.abs(dx) > JOYSTICK_DEAD_ZONE) {
+        if (dx < 0) {
+          keys.a.pressed = true;
+          keys.d.pressed = false;
+          lastKeyP1 = "a";
+          lastKeyP2 = "a";
+        } else {
+          keys.d.pressed = true;
+          keys.a.pressed = false;
+          lastKeyP1 = "d";
+          lastKeyP2 = "d";
+        }
+      } else {
+        keys.a.pressed = false;
+        keys.d.pressed = false;
+        lastKeyP1 = "";
+        lastKeyP2 = "";
+      }
+      break;
     }
-    resetJoystick();
-    break;
-  }
-}, { passive: false });
+  },
+  { passive: false },
+);
+
+joystickBase?.addEventListener(
+  "touchend",
+  (e) => {
+    e.preventDefault();
+    for (const touch of e.changedTouches) {
+      if (touch.identifier !== joystickTouchId) continue;
+      const dy = touch.clientY - joystickStartY;
+      if (dy < -JUMP_THRESHOLD) {
+        const p = getLocalPlayer();
+        if (p && p.velocity.y === 0) {
+          p.velocity.y = -12;
+          jumpSound.currentTime = 0;
+          jumpSound.play().catch(() => {});
+        }
+      }
+      resetJoystick();
+      break;
+    }
+  },
+  { passive: false },
+);
 
 // ---- ATTACK BUTTON ----
 const btnAttack = document.getElementById("btn-attack");
-btnAttack?.addEventListener("touchstart", (e) => {
-  e.preventDefault();
-  if (!gameActive) return;
-  const p = getLocalPlayer();
-  if (p && !p.isAttacking) {
-    p.attack();
-    const snd = window.localRole === "p2" && !window.isBotMode ? skill1Sound2 : skill1Sound1;
-    snd.currentTime = 0;
-    snd.play().catch(() => {});
-  }
-}, { passive: false });
+btnAttack?.addEventListener(
+  "touchstart",
+  (e) => {
+    e.preventDefault();
+    if (!gameActive) return;
+    const p = getLocalPlayer();
+    if (p && !p.isAttacking) {
+      p.attack();
+      const snd =
+        window.localRole === "p2" && !window.isBotMode
+          ? skill1Sound2
+          : skill1Sound1;
+      snd.currentTime = 0;
+      snd.play().catch(() => {});
+    }
+  },
+  { passive: false },
+);
 
 function Serangan({ attacker, victim }) {
   return (

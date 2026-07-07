@@ -323,13 +323,21 @@
         >
           🏆 Leaderboard
         </h3>
-        <div id="leaderboard-list" style="min-height: 200px">
+        <div id="leaderboard-list" class="lb-list-scroll">
           <p style="text-align: center; color: #888">Loading...</p>
+        </div>
+        <!-- Pagination -->
+        <div id="lb-pagination" class="lb-pagination" style="display: none">
+          <button id="lb-prev-btn" class="lb-page-btn" disabled>
+            &#8592; Prev
+          </button>
+          <span id="lb-page-info" class="lb-page-info">Page 1 / 1</span>
+          <button id="lb-next-btn" class="lb-page-btn">Next &#8594;</button>
         </div>
         <button
           id="close-leaderboard-btn"
           class="auth-cta auth-cta--secondary"
-          style="width: 100%; margin-top: 16px"
+          style="width: 100%; margin-top: 12px"
         >
           Close
         </button>
@@ -350,81 +358,84 @@
           ⚔️ Arena Clash — Game Guide
         </h3>
 
-        <h4 style="margin: 0 0 8px 0; color: #333">🎮 Controls:</h4>
-        <div
-          style="
-            background: #f9f9f9;
-            padding: 12px 15px;
-            border-radius: 12px;
-            margin-bottom: 15px;
-          "
-        >
-          <div class="info-key">
-            <h4>Jump</h4>
-            <span>W</span>
+        <!-- Scrollable content wrapper -->
+        <div class="guide-scroll-body">
+          <h4 style="margin: 0 0 8px 0; color: #333">🎮 Controls:</h4>
+          <div
+            style="
+              background: #f9f9f9;
+              padding: 12px 15px;
+              border-radius: 12px;
+              margin-bottom: 15px;
+            "
+          >
+            <div class="info-key">
+              <h4>Jump</h4>
+              <span>W</span>
+            </div>
+            <div class="info-key">
+              <h4>Move Left</h4>
+              <span>A</span>
+            </div>
+            <div class="info-key">
+              <h4>Move Right</h4>
+              <span>D</span>
+            </div>
+            <div class="info-key">
+              <h4>Attack</h4>
+              <span>C</span>
+            </div>
           </div>
-          <div class="info-key">
-            <h4>Move Left</h4>
-            <span>A</span>
+          <h4 style="margin: 0 0 8px 0; color: #333">📜 Match Rules:</h4>
+          <div
+            style="
+              background: #f9f9f9;
+              padding: 12px 15px;
+              border-radius: 12px;
+              font-size: 0.9rem;
+              color: #555;
+              line-height: 1.5;
+            "
+          >
+            <ul style="margin: 0; padding-left: 18px">
+              <li style="margin-bottom: 6px">
+                Each player starts with <strong>100% Health Bar</strong>.
+              </li>
+              <li style="margin-bottom: 6px">
+                Each attack (<kbd>C</kbd>) deals <strong>20% damage</strong> to
+                the enemy.
+              </li>
+              <li style="margin-bottom: 6px">
+                First player to reach <strong>0% health loses</strong> the
+                round.
+              </li>
+              <li style="margin-bottom: 6px">
+                Match is <strong>Best of 3 Rounds</strong> — win 2 rounds to win
+                the match.
+              </li>
+              <li style="margin-bottom: 6px">
+                Each round has a <strong>60-second timer</strong>. If time runs
+                out, the player with more health wins the round.
+              </li>
+              <li style="margin-bottom: 6px">
+                Winner earns <strong>+10 points</strong>, loser loses
+                <strong>-5 points</strong>.
+              </li>
+              <li style="margin-bottom: 6px">
+                If your opponent <strong>disconnects</strong>, you win the match
+                automatically.
+              </li>
+              <li style="margin-bottom: 0">
+                Use jump (<kbd>W</kbd>) to dodge your opponent's attacks!
+              </li>
+            </ul>
           </div>
-          <div class="info-key">
-            <h4>Move Right</h4>
-            <span>D</span>
-          </div>
-          <div class="info-key">
-            <h4>Attack</h4>
-            <span>C</span>
-          </div>
-        </div>
-        <h4 style="margin: 0 0 8px 0; color: #333">📜 Match Rules:</h4>
-        <div
-          style="
-            background: #f9f9f9;
-            padding: 12px 15px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            font-size: 0.9rem;
-            color: #555;
-            line-height: 1.5;
-          "
-        >
-          <ul style="margin: 0; padding-left: 18px">
-            <li style="margin-bottom: 6px">
-              Each player starts with <strong>100% Health Bar</strong>.
-            </li>
-            <li style="margin-bottom: 6px">
-              Each attack (<kbd>C</kbd>) deals <strong>20% damage</strong> to
-              the enemy.
-            </li>
-            <li style="margin-bottom: 6px">
-              First player to reach <strong>0% health loses</strong> the round.
-            </li>
-            <li style="margin-bottom: 6px">
-              Match is <strong>Best of 3 Rounds</strong> — win 2 rounds to win
-              the match.
-            </li>
-            <li style="margin-bottom: 6px">
-              Each round has a <strong>60-second timer</strong>. If time runs
-              out, the player with more health wins the round.
-            </li>
-            <li style="margin-bottom: 6px">
-              Winner earns <strong>+10 points</strong>, loser loses
-              <strong>-5 points</strong>.
-            </li>
-            <li style="margin-bottom: 6px">
-              If your opponent <strong>disconnects</strong>, you win the match
-              automatically.
-            </li>
-            <li style="margin-bottom: 0">
-              Use jump (<kbd>W</kbd>) to dodge your opponent's attacks!
-            </li>
-          </ul>
         </div>
 
         <button
           id="close-info-btn"
           class="auth-cta auth-cta--secondary"
-          style="width: 100%"
+          style="width: 100%; margin-top: 16px"
         >
           Got it & Close
         </button>
