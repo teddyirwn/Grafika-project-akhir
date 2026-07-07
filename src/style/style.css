@@ -1,4 +1,4 @@
-body {
+﻿body {
   padding: 0;
   margin: 0;
   box-sizing: border-box;
@@ -189,7 +189,7 @@ body {
   background: #000;
   z-index: 1000;
   width: 100%;
-  min-height: 100vh;
+  height: 100%;
   overflow: hidden;
 }
 
@@ -578,11 +578,17 @@ body {
   color: white;
 }
 
-/* Mobile landscape */
+
+/* Mobile landscape - full screen canvas */
 @media (max-width: 900px) and (orientation: landscape) {
   #battle-scene {
     padding: 0;
     overflow: hidden;
+  }
+
+  .arena-wrapper {
+    justify-content: center;
+    height: 100vh;
   }
 
   .arena-container {
@@ -592,29 +598,56 @@ body {
 
   #arena {
     width: 100vw;
-    height: auto;
+    height: calc(100vw * 506 / 1024);
+    max-height: 100vh;
   }
 
   .hud-name {
-    font-size: 0.75rem;
-    max-width: 100px;
+    font-size: 0.7rem;
+    max-width: 90px;
   }
 
   .hud-health-bar {
-    width: 110px;
-    height: 10px;
+    width: 90px;
+    height: 8px;
   }
 
   #timer-display {
-    font-size: 1.4rem;
+    font-size: 1.2rem;
+  }
+
+  #round-label {
+    font-size: 0.6rem;
+  }
+
+  .round-wins {
+    font-size: 0.7rem;
+  }
+
+  #battle-hud {
+    padding: 4px 8px;
+  }
+
+  #mobile-controls {
+    height: 130px;
+  }
+
+  #game-over-screen {
+    padding: 14px;
   }
 
   #game-over-screen h1 {
-    font-size: 1.3rem;
+    font-size: 1.2rem;
   }
+}
 
-  #game-over-screen h1 {
-    font-size: 1.4rem;
+/* Prevent scroll/bounce on mobile */
+@media (max-width: 900px) {
+  body {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    height: 100%;
   }
 }
 

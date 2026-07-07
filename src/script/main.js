@@ -507,24 +507,27 @@ function unlockOrientation() {
 }
 
 // Override startGame to show mobile controls and lock orientation
-const _origStartGame = window.startGame;
-window.startGame = function () {
+// Langsung patch startGame function tanpa override window.startGame
+const _origStartGame = startGame;
+function startGameWithMobile() {
   _origStartGame();
-  lockLandscape();
-  setTimeout(updateMobileControls, 100);
-};
+  if (isMobile()) {
+    lockLandscape();
+    setTimeout(updateMobileControls, 100);
+  }
+}
+window.startGame = startGameWithMobile;
 
-// Hide mobile controls when game ends
-const _origWinnerCheck = winnerCheck;
-// Patch gameActive watcher for mobile controls
+// Also show controls when game becomes active (covers round 2+)
 setInterval(() => {
   const mobileControls = document.getElementById("mobile-controls");
   if (!mobileControls) return;
-  if (!gameActive && mobileControls.style.display !== "none") {
+  if (isMobile() && gameActive && mobileControls.style.display === "none") {
+    mobileControls.style.display = "block";
+  } else if (!gameActive && mobileControls.style.display !== "none") {
     mobileControls.style.display = "none";
-    unlockOrientation();
   }
-}, 500);
+}, 300);
 
 // ---- VIRTUAL JOYSTICK (swipe up = jump, left/right = move) ----
 const joystickBase = document.getElementById("joystick-base");
