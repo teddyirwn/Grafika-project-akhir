@@ -929,8 +929,8 @@ if (fullscreenBtn) {
         elem.msRequestFullscreen();
       }
 
-      fullscreenBtn.innerText = "📺 Exit Fullscreen";
-      fullscreenBtn.style.backgroundColor = "#e74c3c"; // Ubah warna jadi merah saat aktif
+      fullscreenBtn.innerText = "Exit Fullscreen";
+      fullscreenBtn.style.border = "1px solid #e74c3c"; // Ubah warna jadi merah saat aktif
     } else {
       // Keluar dari mode Fullscreen
       if (document.exitFullscreen) {
@@ -941,8 +941,8 @@ if (fullscreenBtn) {
         document.msExitFullscreen();
       }
 
-      fullscreenBtn.innerText = "📺 Go Fullscreen";
-      fullscreenBtn.style.backgroundColor = "#2980b9"; // Kembalikan ke warna biru
+      fullscreenBtn.innerText = "Go Fullscreen";
+      fullscreenBtn.style.border = "1px solid #2980b9"; // Kembalikan ke warna biru
     }
   });
 }

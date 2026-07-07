@@ -15,9 +15,6 @@ const joinRoomBtn = document.getElementById("join-room-btn");
 const joinCodeInput = document.getElementById("join-code-input");
 const logoutBtn = document.getElementById("logout-btn");
 
-const createUsername = document.getElementById("create-username");
-const joinUsername = document.getElementById("join-username");
-
 const createBtn = document.getElementById("create-btn");
 const joinBtn = document.getElementById("join-btn");
 const vsBotBtn = document.getElementById("vs-bot-btn");

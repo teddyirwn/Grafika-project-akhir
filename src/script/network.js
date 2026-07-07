@@ -34,12 +34,10 @@ export function setupRoomChannel(
   // Buat listener baru dengan referensi tersimpan
   _roomPlayersListener = (serverPlayers) => {
     window.players = serverPlayers;
-    console.log("[CLIENT] Received updated player list:", serverPlayers);
     if (onSyncCallback) onSyncCallback(serverPlayers);
   };
 
   _gameStartedListener = () => {
-    console.log("[CLIENT] Game started by host!");
     if (onStartCallback) onStartCallback();
   };
 
@@ -48,7 +46,6 @@ export function setupRoomChannel(
 
   // Listen for opponent disconnect — staying player wins automatically
   socket.off("opponent_disconnected").on("opponent_disconnected", (payload) => {
-    console.log(`[DISCONNECT] Opponent ${payload.username} left the game`);
     if (window.onOpponentDisconnected) window.onOpponentDisconnected(payload);
   });
 
@@ -227,7 +224,6 @@ export function sendRoundSignal(round) {
 
 export function listenRoundStarted(callback) {
   socket.off("round_started").on("round_started", (payload) => {
-    console.log(`[CLIENT] Round ${payload.round} started by host`);
     if (callback) callback(payload.round);
   });
 }

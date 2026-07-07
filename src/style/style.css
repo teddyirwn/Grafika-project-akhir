@@ -420,13 +420,6 @@
   z-index: 20;
 }
 
-.foto {
-  width: 45px;
-  height: 45px;
-  border-radius: 10px;
-  object-fit: cover;
-}
-
 .google-btn {
   display: flex !important;
   align-items: center;
@@ -1043,7 +1036,7 @@
 }
 
 /* Tampilkan tombol HANYA jika dibuka di HP / perangkat layar sentuh */
-@media (max-width: 1024px) or (pointer: coarse) {
+@media (max-width: 768px) {
   .mobile-only {
     display: block !important;
   }
