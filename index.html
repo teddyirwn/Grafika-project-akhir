@@ -2,191 +2,444 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
     <title>Arena Clash - Project Akhir</title>
   </head>
   <body>
+    <!-- START / AUTH SCENE -->
     <div id="auth-scene">
       <div class="auth-card auth-card--centered">
         <div class="logo-icon">⚔️</div>
         <h1 class="auth-title">Arena Clash</h1>
-        <h3 class="auth-subtitle" id="auth-mode">Sign In</h3>
+        <h3 class="auth-subtitle">Welcome</h3>
+        <p class="auth-note">
+          Sign in with your Google account to enter the arena.
+        </p>
 
-        <p class="auth-note">Not registered yet? <a href="#" id="auth-toggle-link">Click here</a></p>
+        <p
+          id="auth-error"
+          class="auth-msg auth-msg--error"
+          style="display: none"
+        ></p>
+        <p
+          id="auth-success"
+          class="auth-msg auth-msg--success"
+          style="display: none"
+        ></p>
 
-        <!-- Global auth feedback -->
-        <p id="auth-error" class="auth-msg auth-msg--error" style="display:none"></p>
-        <p id="auth-success" class="auth-msg auth-msg--success" style="display:none"></p>
+        <!-- Google Login Button -->
+        <button type="button" id="google-login-btn" class="auth-cta google-btn">
+          <img
+            src="https://www.gstatic.com/images/branding/product/1x/gsa_64dp.png"
+            alt="Google Icon"
+            class="google-icon-img"
+          />
+          Sign in with Google
+        </button>
+      </div>
+    </div>
 
-        <form id="login-form" class="auth-form" style="display:block">
-          <input class="pill-input" id="login-email" type="email" placeholder="Email" required />
-          <input class="pill-input" id="login-password" type="password" placeholder="Password" required />
+    <!-- POP-UP CONFIRMATION MODAL (Pendaftaran Username Game) -->
+    <div id="register-confirm-modal" class="modal">
+      <div class="modal-card">
+        <h3 style="margin: 0 0 10px 0; color: #0b5a3e; font-size: 1.5rem">
+          Account Registration
+        </h3>
+        <p style="color: #555; font-size: 0.95rem; margin-bottom: 20px">
+          Your Google account is not registered yet. Would you like to create a
+          new game account?
+        </p>
 
-          <div class="auth-remember-row">
-            <label><input type="checkbox" id="remember-me" /> Remember Me</label>
-            <a href="#" class="forgot-link" id="forgot-link">Forgot Password?</a>
+        <div class="field" style="margin-bottom: 20px">
+          <input
+            class="pill-input"
+            id="oauth-username"
+            placeholder="Enter your game username"
+            maxlength="12"
+            style="width: 100%"
+          />
+        </div>
+
+        <div style="display: flex; gap: 10px; justify-content: center">
+          <button id="confirm-register-btn" class="auth-cta" style="flex: 1">
+            Yes, Register
+          </button>
+          <button
+            id="cancel-register-btn"
+            class="auth-cta auth-cta--secondary"
+            style="flex: 1"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN MENU SCENE -->
+    <div id="menu-scene" style="display: none">
+      <div class="menu-card">
+        <div class="menu-top">
+          <div class="logo-icon">⚔️</div>
+          <h1>Arena Clash</h1>
+          <p
+            id="menu-username-display"
+            style="font-weight: 600; color: #0b5a3e; margin: 2px 0 0 0"
+          ></p>
+          <p
+            id="menu-score-display"
+            style="font-size: 0.85rem; color: #888; margin: 0 0 8px 0"
+          >
+            Points: 0
+          </p>
+        </div>
+        <div class="menu-actions">
+          <button type="button" id="vs-bot-btn" class="auth-cta menu-btn-play">
+            ⚔️ Play vs BOT
+          </button>
+          <button type="button" id="create-btn" class="auth-cta menu-btn-play">
+            🏠 Create Room
+          </button>
+          <button type="button" id="join-btn" class="auth-cta menu-btn-play">
+            🚪 Join Room
+          </button>
+          <div class="menu-btn-row">
+            <button
+              type="button"
+              id="info-menu-btn"
+              class="auth-cta menu-btn-secondary"
+            >
+              ℹ️ Game Guide
+            </button>
+            <button
+              type="button"
+              id="leaderboard-btn"
+              class="auth-cta menu-btn-secondary"
+            >
+              🏆 Leaderboard
+            </button>
           </div>
-
-          <button type="button" id="login-btn" class="auth-cta">Sign in</button>
-        </form>
-
-        <form id="signup-form" class="auth-form" style="display:none">
-          <input class="pill-input" id="signup-username" placeholder="Username (shown in-game)" maxlength="12" required />
-          <input class="pill-input" id="signup-email" type="email" placeholder="Email" required />
-          <input class="pill-input" id="signup-password" type="password" placeholder="Password (min 6 chars)" required />
-          <p class="auth-small">By registering, you agree to our terms.</p>
-          <button type="button" id="signup-btn" class="auth-cta">Sign up</button>
-        </form>
+          <button
+            type="button"
+            id="logout-btn"
+            class="auth-cta auth-cta--secondary"
+          >
+            Log Out
+          </button>
+        </div>
       </div>
     </div>
 
-    <div id="menu-scene" style="display:none" class="menu-card">
-      <div class="menu-top">
-        <div class="logo-icon">⚔️</div>
-        <h1>Arena Clash</h1>
-        <p>Choose your next step for the arena.</p>
-      </div>
-      <div class="menu-actions">
-        <button type="button" id="create-btn" class="auth-cta">Create Room</button>
-        <button type="button" id="join-btn" class="auth-cta">Join Room</button>
-        <button type="button" id="logout-btn" class="auth-cta auth-cta--secondary">Log Out</button>
-      </div>
-    </div>
-
-    <!-- LOBBY SCENE -->
-
+    <!-- CREATE LOBBY SCENE -->
     <div id="create-scene" style="display: none">
-      <div class="lobby-card">
-        <h2>Create Lobby</h2>
-        <p class="lobby-status">Logged As: <span id="create-username">-</span></p>
-
-        <div class="invite-row">
-          <input id="invite-code" readonly placeholder="Invite Code" />
-          <button id="copy-invite">Copy</button>
+      <div
+        class="lobby-layout"
+        style="flex-direction: column; align-items: center"
+      >
+        <div class="lobby-card">
+          <h2>🏠 Create Lobby</h2>
+          <p class="lobby-status">
+            Logged as: <strong><span id="create-username">-</span></strong>
+          </p>
+          <div class="invite-row">
+            <input id="invite-code" readonly placeholder="Invite Code" />
+            <button
+              id="copy-invite"
+              class="auth-cta"
+              style="width: auto; padding: 10px 16px; font-size: 0.9rem"
+            >
+              📋 Copy
+            </button>
+          </div>
+          <p
+            id="copy-feedback"
+            style="
+              font-size: 0.8rem;
+              color: #00a25a;
+              min-height: 18px;
+              margin: 4px 0 0 0;
+            "
+          ></p>
+          <h4 style="margin: 12px 0 6px 0">Players</h4>
+          <ul id="create-players">
+            <li>Waiting for players...</li>
+          </ul>
+          <button
+            id="create-start-btn"
+            class="auth-cta"
+            style="margin-top: 12px; width: 100%"
+            disabled
+          >
+            Start Game
+          </button>
+          <div class="lobby-bottom-row">
+            <button id="info-p1-btn" class="auth-cta menu-btn-secondary">
+              ℹ️ Guide
+            </button>
+            <button
+              id="create-back-btn"
+              class="auth-cta auth-cta--secondary menu-btn-secondary"
+            >
+              ← Back
+            </button>
+          </div>
         </div>
-
-        <h4>Players</h4>
-        <ul id="lobby-players"></ul>
-        <div id="join-code-row" style="display:flex;gap:8px;margin-top:8px;">
-          <input id="join-code-input" class="pill-input" placeholder="Enter invite code" />
-          <button id="join-code-btn">Join</button>
-        </div>
-        <div style="display:flex;gap:8px;margin-top:8px;">
-        <ul id="create-players">
-          <li>Waiting for players...</li>
-        </ul>
-
-        <div class="section-row">
-          <button id="simulate-join">Simulate Join</button>
-          <button id="create-start-btn" disabled>Start Game</button>
-        </div>
-
-        <button id="create-back-btn" class="auth-cta auth-cta--secondary">Back</button>
       </div>
     </div>
 
+    <!-- JOIN LOBBY SCENE -->
     <div id="join-scene" style="display: none">
-      <div class="lobby-card">
-        <h2>Join Lobby</h2>
-        <p class="lobby-status">Logged As: <span id="join-username">-</span></p>
-
-        <div class="invite-row">
-          <input id="join-code-input" placeholder="Masukkan Invite Code" />
-          <button id="join-room-btn">Join</button>
+      <div
+        class="lobby-layout"
+        style="flex-direction: column; align-items: center"
+      >
+        <div class="lobby-card">
+          <h2>🚪 Join Lobby</h2>
+          <p class="lobby-status">
+            Logged as: <strong><span id="join-username">-</span></strong>
+          </p>
+          <div class="invite-row">
+            <input id="join-code-input" placeholder="Enter Invite Code" />
+            <button
+              id="join-room-btn"
+              class="auth-cta"
+              style="width: auto; padding: 10px 16px; font-size: 0.9rem"
+            >
+              Join
+            </button>
+          </div>
+          <h4 style="margin: 12px 0 6px 0">Players in Room</h4>
+          <ul id="join-players">
+            <li>Waiting for host...</li>
+          </ul>
+          <div class="lobby-bottom-row" style="margin-top: 12px">
+            <button id="info-p2-btn" class="auth-cta menu-btn-secondary">
+              ℹ️ Guide
+            </button>
+            <button
+              id="join-back-btn"
+              class="auth-cta auth-cta--secondary menu-btn-secondary"
+            >
+              ← Back
+            </button>
+          </div>
         </div>
-
-        <h4>Players</h4>
-        <ul id="join-players">
-          <li>Waiting for host...</li>
-        </ul>
-
-        <div class="section-row">
-          <button id="join-ready-btn" disabled>Ready</button>
-          <button id="leave-lobby" style="margin-left:auto">Logout</button>
-        </div>
-
-        <button id="join-back-btn" class="auth-cta auth-cta--secondary">Back</button>
       </div>
     </div>
 
-    <div id="battle-scene" style="display: none">
-      <div class="container">
-        <div id="health-container">
-          <div class="health-bar-wrapper">
-            <div id="player1-health" class="health-bar-fill"></div>
-          </div>
+    <!-- BATTLE ARENA SCENE -->
+    <div
+      id="battle-scene"
+      style="display: none; align-items: center; justify-content: center"
+    >
+      <div class="arena-wrapper">
+        <div class="arena-container">
+          <canvas id="arena"></canvas>
 
-          <div class="health-bar-wrapper">
-            <div id="player2-health" class="health-bar-fill"></div>
-          </div>
-        </div>
+          <!-- HUD OVERLAY inside canvas -->
+          <div id="battle-hud">
+            <!-- P1 side -->
+            <div class="hud-player hud-player--left">
+              <div class="hud-name" id="display-p1-name">Player 1</div>
+              <div class="hud-health-bar">
+                <div id="player1-health" class="health-bar-fill"></div>
+              </div>
+              <div id="p1-round-wins" class="round-wins">○ ○</div>
+            </div>
 
-        <div id="game-over-screen">
-          <h1 id="winner-text">PLAYER 1 WINS!</h1>
-          <button id="restart-btn">PLAY AGAIN</button>
-        </div>
+            <!-- Center HUD -->
+            <div class="hud-center">
+              <div id="round-label">ROUND 1</div>
+              <div id="timer-display">60</div>
+            </div>
 
-        <div class="player">
-          <div class="info-header">
-            <img class="foto" src="/asset/characters/Samurai/foto-samurai.jpg" alt="foto samurai">
-            <div class="info">
-              <h4 id="display-p1-name">Player 1</h4>
-              <p>Samurai</p>
+            <!-- P2 side -->
+            <div class="hud-player hud-player--right">
+              <div class="hud-name" id="display-p2-name">Player 2</div>
+              <div class="hud-health-bar">
+                <div id="player2-health" class="health-bar-fill"></div>
+              </div>
+              <div
+                id="p2-round-wins"
+                class="round-wins"
+                style="text-align: right"
+              >
+                ○ ○
+              </div>
             </div>
           </div>
-          <p>Keyboard Controls:</p>
-          <hr />
-          <div class="info-card">
+
+          <div id="game-over-screen">
+            <div id="round-over-content">
+              <p
+                id="round-over-label"
+                style="font-size: 1rem; margin: 0 0 4px 0; color: #aaa"
+              >
+                ROUND 1
+              </p>
+              <h1 id="winner-text">PLAYER 1 WINS!</h1>
+              <p
+                id="next-round-text"
+                style="font-size: 0.95rem; color: #ccc; margin: 4px 0 16px 0"
+              ></p>
+            </div>
+            <button id="restart-btn">PLAY AGAIN</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LEADERBOARD MODAL -->
+    <div id="leaderboard-modal" class="modal">
+      <div class="modal-card" style="width: 420px">
+        <h3
+          style="
+            margin: 0 0 16px 0;
+            color: #0b5a3e;
+            font-size: 1.4rem;
+            text-align: center;
+          "
+        >
+          🏆 Leaderboard
+        </h3>
+        <div id="leaderboard-list" style="min-height: 200px">
+          <p style="text-align: center; color: #888">Loading...</p>
+        </div>
+        <button
+          id="close-leaderboard-btn"
+          class="auth-cta auth-cta--secondary"
+          style="width: 100%; margin-top: 16px"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+
+    <!-- POP-UP MODAL KONTROL & PERATURAN -->
+    <div id="control-info-modal" class="modal">
+      <div class="modal-card" style="width: 440px; text-align: left">
+        <h3
+          style="
+            margin: 0 0 15px 0;
+            color: #2980b9;
+            font-size: 1.5rem;
+            text-align: center;
+          "
+        >
+          ⚔️ Arena Clash — Game Guide
+        </h3>
+
+        <h4 style="margin: 0 0 8px 0; color: #333">🎮 Controls:</h4>
+        <div
+          style="
+            background: #f9f9f9;
+            padding: 12px 15px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+          "
+        >
+          <div class="info-key">
             <h4>Jump</h4>
             <span>W</span>
           </div>
-          <div class="info-card">
-            <h4>Left</h4>
+          <div class="info-key">
+            <h4>Move Left</h4>
             <span>A</span>
           </div>
-          <div class="info-card">
-            <h4>Right</h4>
+          <div class="info-key">
+            <h4>Move Right</h4>
             <span>D</span>
           </div>
-          <div class="info-card">
+          <div class="info-key">
             <h4>Attack</h4>
             <span>C</span>
           </div>
         </div>
-
-        <div class="arena-Container">
-          <h1>Arena Battle</h1>
-          <canvas id="arena"></canvas>
+        <h4 style="margin: 0 0 8px 0; color: #333">📜 Match Rules:</h4>
+        <div
+          style="
+            background: #f9f9f9;
+            padding: 12px 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            color: #555;
+            line-height: 1.5;
+          "
+        >
+          <ul style="margin: 0; padding-left: 18px">
+            <li style="margin-bottom: 6px">
+              Each player starts with <strong>100% Health Bar</strong>.
+            </li>
+            <li style="margin-bottom: 6px">
+              Each attack (<kbd>C</kbd>) deals <strong>20% damage</strong> to
+              the enemy.
+            </li>
+            <li style="margin-bottom: 6px">
+              First player to reach <strong>0% health loses</strong> the round.
+            </li>
+            <li style="margin-bottom: 6px">
+              Match is <strong>Best of 3 Rounds</strong> — win 2 rounds to win
+              the match.
+            </li>
+            <li style="margin-bottom: 6px">
+              Each round has a <strong>60-second timer</strong>. If time runs
+              out, the player with more health wins the round.
+            </li>
+            <li style="margin-bottom: 6px">
+              Winner earns <strong>+10 points</strong>, loser loses
+              <strong>-5 points</strong>.
+            </li>
+            <li style="margin-bottom: 6px">
+              If your opponent <strong>disconnects</strong>, you win the match
+              automatically.
+            </li>
+            <li style="margin-bottom: 0">
+              Use jump (<kbd>W</kbd>) to dodge your opponent's attacks!
+            </li>
+          </ul>
         </div>
 
-        <div class="player">
-          <div class="info-header">
-            <img class="foto" src="/asset/characters/Shinobi/foto-shinobi.jpg" alt="foto shinobi">
-            <div class="info">
-              <h4 id="display-p2-name">Player 2</h4>
-              <p>Shinobi</p>
-            </div>
-          </div>
-          <p>Keyboard Controls:</p>
-          <hr />
-          <div class="info-card">
-            <h4>Jump</h4>
-            <span>I</span>
-          </div>
-          <div class="info-card">
-            <h4>Left</h4>
-            <span>J</span>
-          </div>
-          <div class="info-card">
-            <h4>Right</h4>
-            <span>L</span>
-          </div>
-          <div class="info-card">
-            <h4>Attack</h4>
-            <span>N</span>
-          </div>
+        <button
+          id="close-info-btn"
+          class="auth-cta auth-cta--secondary"
+          style="width: 100%"
+        >
+          Got it & Close
+        </button>
+      </div>
+    </div>
+
+    <!-- MOBILE CONTROLS (only shown on touch devices during battle) -->
+    <div id="mobile-controls" style="display: none">
+      <!-- Left: Virtual Joystick (swipe up = jump) -->
+      <div id="joystick-zone">
+        <div id="joystick-hint">↑ swipe up = jump</div>
+        <div id="joystick-base">
+          <div id="joystick-knob"></div>
         </div>
+      </div>
+      <!-- Right: Attack Button only -->
+      <div id="action-buttons">
+        <button id="btn-attack" class="mobile-btn mobile-btn--attack">
+          ⚔️
+        </button>
+      </div>
+    </div>
+
+    <!-- LANDSCAPE OVERLAY (shown when portrait on mobile) -->
+    <div id="rotate-overlay">
+      <div class="rotate-content">
+        <div style="font-size: 3rem">📱➡️</div>
+        <p>Please rotate your device to landscape mode to play</p>
       </div>
     </div>
 

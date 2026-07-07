@@ -12,84 +12,79 @@ export class Fighter extends Sprite {
     offset = { x: 0, y: 0 },
     sprites,
   }) {
-    super({ position, imageSrc, scale, framesMax });
-    this.velocity = velocity; // kecepatan gerak
-    this.width = 50;
-    this.height = 150;
+    super({ position, imageSrc, scale, framesMax, offset });
+    this.velocity = velocity;
+    this.width = 60;
+    this.height = 120;
     this.health = 100;
     this.isAttacking = false;
     this.color = color;
-    this.dead = false;
-    this.offset = offset;
-    this.facing = "right";
 
     this.sprites = sprites;
     for (const sprite in this.sprites) {
-      sprites[sprite].image = new Image();
-      sprites[sprite].image.src = sprites[sprite].imageSrc;
+      this.sprites[sprite].image = new Image();
+      this.sprites[sprite].image.src = this.sprites[sprite].imageSrc;
     }
 
     this.attackBox = {
       position: { x: this.position.x, y: this.position.y },
-      width: 130,
-      height: 60,
+      width: 140,
+      height: 80,
     };
   }
 
   update(ctx, canvasHeight) {
     super.update(ctx);
 
-    // gerakan attack box mengikuti posisi fighter
     if (this.facing === "right") {
       this.attackBox.position.x = this.position.x + this.width;
     } else {
-      this.attackBox.position.x =
-        this.position.x + this.width - this.attackBox.width;
+      this.attackBox.position.x = this.position.x - this.attackBox.width;
     }
+    this.attackBox.position.y = this.position.y + 20;
 
-    this.attackBox.position.y = this.position.y;
-
-    // update posisi fighter berdasarkan kecepatan
     this.position.x += this.velocity.x;
     this.position.y += this.velocity.y;
 
-    // BATAS TEMBOK  KIRI
-    if (this.position.x < 0) {
-      this.position.x = 0;
-    }
-
-    // BATAS TEMBOK  KANAN
+    if (this.position.x < 0) this.position.x = 0;
     if (this.position.x + this.width > CONFIG.canvasWidth) {
       this.position.x = CONFIG.canvasWidth - this.width;
     }
 
-    // buat jika benturan dengan lantai
-    if (
-      this.position.y + this.height + this.velocity.y >=
-      canvasHeight - CONFIG.groundMargin
-    ) {
+    const groundLevel = canvasHeight - CONFIG.groundMargin - this.height;
+    if (this.position.y >= groundLevel) {
       this.velocity.y = 0;
-      //   this.position.y = canvasHeight -  - this.height;
+      this.position.y = groundLevel;
     } else {
       this.velocity.y += CONFIG.gravity;
     }
   }
 
   attack() {
+    if (this.dead) return;
     this.switchSprite("attack");
     this.isAttacking = true;
-
-    setTimeout(() => {
-      this.isAttacking = false;
-    }, 100);
   }
 
   switchSprite(sprite) {
+    if (this.dead) {
+      if (this.sprites.death && this.image !== this.sprites.death.image) {
+        this.image = this.sprites.death.image;
+        this.framesMax = this.sprites.death.framesMax;
+        this.frameCurrent = 0;
+      }
+      return;
+    }
+
+    if (!this.sprites[sprite]) return;
+
     if (
+      this.sprites.attack &&
       this.image === this.sprites.attack.image &&
       this.frameCurrent < this.sprites.attack.framesMax - 1
-    )
+    ) {
       return;
+    }
 
     if (this.image !== this.sprites[sprite].image) {
       this.image = this.sprites[sprite].image;
@@ -98,17 +93,13 @@ export class Fighter extends Sprite {
     }
   }
 
-  // Logika untuk mengurangi health saat terkena serangan
   takeHit() {
-    if (this.dead) return; // Jika sudah mati maka berenti
+    if (this.dead) return;
     this.health -= 20;
     if (this.health <= 0) {
       this.health = 0;
       this.dead = true;
-
-      if (this.sprites.death) {
-        this.switchSprite("death");
-      }
+      this.switchSprite("death");
     }
   }
 }

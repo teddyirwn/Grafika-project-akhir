@@ -7,7 +7,6 @@ export class Sprite {
     offset = { x: 0, y: 0 },
   }) {
     this.position = position;
-    this.imageSrc = imageSrc;
     this.scale = scale;
     this.framesMax = framesMax;
     this.offset = offset;
@@ -17,6 +16,7 @@ export class Sprite {
     this.framesElapsed = 0;
     this.framesHold = 5;
     this.facing = "right";
+    this.dead = false;
   }
 
   draw(ctx) {
@@ -31,7 +31,6 @@ export class Sprite {
         this.position.y - this.offset.y,
       );
       ctx.scale(-1, 1);
-
       ctx.drawImage(
         this.image,
         this.frameCurrent * (this.image.width / this.framesMax),
@@ -63,12 +62,11 @@ export class Sprite {
   update(ctx) {
     this.draw(ctx);
 
-    // jika sudah mati, tetap di frame terakhir
     if (this.dead && this.frameCurrent === this.framesMax - 1) {
       return;
     }
-    this.framesElapsed++;
 
+    this.framesElapsed++;
     if (this.framesElapsed % this.framesHold === 0) {
       if (this.frameCurrent < this.framesMax - 1) {
         this.frameCurrent++;
