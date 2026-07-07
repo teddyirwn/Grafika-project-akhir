@@ -57,6 +57,34 @@
   width: 100%;
 }
 
+/* Auth layout wrappers — default column (desktop/portrait) */
+.auth-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.auth-right {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+}
+
+/* Menu layout wrappers — default column */
+.menu-card-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.menu-card-right {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
 .logo-icon {
   font-size: 3rem;
   margin-bottom: 10px;
@@ -676,207 +704,230 @@
 }
 
 /* ============================================
-   MOBILE UI — AUTH / MENU / LOBBY (portrait)
-   ============================================ */
-@media (max-width: 480px) and (orientation: portrait) {
-  #auth-scene,
-  #menu-scene,
-  #create-scene,
-  #join-scene {
-    background: radial-gradient(
-      ellipse at top,
-      #e8f5ee 0%,
-      #f0f4f2 60%,
-      #e6edf5 100%
-    );
-    padding: 16px;
-    align-items: center;
-  }
-
-  .auth-card,
-  .menu-card,
-  .lobby-card {
-    width: 100%;
-    max-width: 360px;
-    border-radius: 24px;
-    padding: 24px 20px 20px 20px;
-    box-shadow: 0 8px 32px rgba(22, 31, 23, 0.12);
-  }
-}
-
-/* ============================================
-   MOBILE UI — AUTH / MENU / LOBBY (landscape & semua mobile)
+   MOBILE UI — AUTH / MENU / LOBBY
+   Landscape: layout 2 kolom horizontal
    ============================================ */
 @media (max-height: 500px) and (orientation: landscape) {
-  /* Background gradien lebih menarik di mobile */
+  /* Scene wrapper jadi flex row */
   #auth-scene,
   #menu-scene,
   #create-scene,
   #join-scene {
-    background: radial-gradient(
-      ellipse at top,
-      #e8f5ee 0%,
-      #f0f4f2 60%,
-      #e6edf5 100%
-    );
-    padding: 12px 16px;
+    background: radial-gradient(ellipse at center, #e8f5ee 0%, #d4ede0 100%);
+    padding: 8px 12px;
     align-items: center;
-    overflow-y: auto;
+    justify-content: center;
+    overflow: hidden;
   }
 
-  /* Card lebih compact di mobile landscape */
-  .auth-card,
-  .menu-card,
-  .lobby-card {
-    width: 100%;
-    max-width: 500px;
-    border-radius: 20px;
-    padding: 16px 18px;
-    box-shadow: 0 8px 32px rgba(22, 31, 23, 0.12);
-    margin: auto;
+  /* ---- LOGIN / AUTH ---- */
+  .auth-card {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 24px;
+    width: 88vw;
+    max-width: 600px;
+    padding: 18px 24px;
+    border-radius: 18px;
+    text-align: left;
   }
 
-  /* AUTH — Login page */
-  .auth-card--centered .logo-icon {
-    font-size: 2.6rem;
-    margin-bottom: 6px;
+  /* Kiri: logo + title */
+  .auth-left {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 120px;
+    flex-shrink: 0;
   }
 
-  .auth-card--centered .logo-icon {
-    font-size: 1.8rem;
+  .logo-icon {
+    font-size: 2.4rem;
     margin-bottom: 4px;
   }
 
   .auth-title {
     font-size: 18px;
-    margin: 2px 0 1px 0;
+    margin: 3px 0 0 0;
+    text-align: center;
   }
 
   .auth-subtitle {
-    font-size: 0.85rem;
-    margin: 2px 0 4px 0;
+    font-size: 0.82rem;
+    margin: 3px 0 0 0;
+    text-align: center;
+  }
+
+  /* Kanan: note + button */
+  .auth-right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
   }
 
   .auth-note {
-    font-size: 0.72rem;
+    font-size: 0.78rem;
     line-height: 1.4;
-    color: #777;
-    margin-bottom: 6px;
+    margin-bottom: 10px;
+    color: #666;
   }
 
   .google-btn {
-    padding: 10px 14px;
-    font-size: 0.88rem;
+    padding: 11px 16px;
+    font-size: 0.9rem;
     border-radius: 12px;
-    margin-top: 8px;
-    width: 100%;
+    margin-top: 0;
+    white-space: nowrap;
   }
 
   .google-icon-img {
-    width: 16px;
-    height: 16px;
+    width: 17px;
+    height: 17px;
   }
 
-  /* MENU — tombol lebih compact di landscape */
+  /* ---- MENU ---- */
+  .menu-card {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 20px;
+    width: 92vw;
+    max-width: 700px;
+    padding: 16px 22px;
+    border-radius: 18px;
+  }
+
+  /* Kiri menu: logo + nama + skor */
+  .menu-card-left {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 120px;
+    flex-shrink: 0;
+  }
+
   .menu-card .logo-icon {
-    font-size: 1.5rem;
-    margin-bottom: 2px;
+    font-size: 2rem;
+    margin-bottom: 4px;
   }
 
   .menu-card h1 {
-    font-size: 1.2rem;
-    margin: 2px 0 2px 0;
+    font-size: 1.15rem;
+    margin: 2px 0;
+    color: #0b5a3e;
   }
 
   #menu-username-display {
-    font-size: 0.82rem !important;
+    font-size: 0.85rem !important;
+    margin: 3px 0 0 0 !important;
   }
 
   #menu-score-display {
-    font-size: 0.72rem !important;
-    margin-bottom: 6px !important;
+    font-size: 0.75rem !important;
+    margin: 2px 0 0 0 !important;
+  }
+
+  /* Kanan menu: tombol-tombol */
+  .menu-card-right {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    flex: 1;
   }
 
   .auth-cta {
     padding: 10px 12px;
-    font-size: 0.88rem;
+    font-size: 0.92rem;
     border-radius: 12px;
+    height: 3rem;
   }
 
   .menu-btn-play {
-    margin-bottom: 6px;
-  }
-
-  .menu-btn-secondary {
-    font-size: 0.76rem;
-    padding: 8px 6px;
+    margin-bottom: 0;
   }
 
   .menu-btn-row {
-    gap: 6px;
-    margin-bottom: 6px;
+    gap: 7px;
+    margin-bottom: 0;
   }
 
-  /* LOBBY — kompak */
+  .menu-btn-secondary {
+    font-size: 0.82rem;
+    padding: 9px 8px;
+  }
+
+  /* ---- LOBBY ---- */
+  .lobby-card {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 16px;
+    width: 92vw;
+    max-width: 720px;
+    padding: 16px 20px;
+    border-radius: 18px;
+    overflow-y: auto;
+    max-height: 96dvh;
+  }
+
   .lobby-card h2 {
-    font-size: 1.2rem;
-    margin: 0 0 6px 0;
+    font-size: 1rem;
+    margin: 0 0 4px 0;
   }
 
   .lobby-status {
-    font-size: 0.82rem;
-    margin: 0 0 10px 0;
+    font-size: 0.72rem;
+    margin: 0 0 6px 0;
   }
 
   .invite-row input,
   #join-code-input {
-    padding: 11px 14px;
-    font-size: 0.9rem;
+    padding: 8px 12px;
+    font-size: 0.82rem;
   }
 
   .invite-row .auth-cta {
-    padding: 10px 12px !important;
-    font-size: 0.82rem !important;
+    padding: 8px 10px !important;
+    font-size: 0.76rem !important;
     white-space: nowrap;
   }
 
   #create-players li,
   #join-players li {
-    padding: 10px 12px;
-    font-size: 0.88rem;
-    border-radius: 12px;
-  }
-
-  .lobby-bottom-row {
-    gap: 8px;
-    margin-top: 10px;
-  }
-
-  /* Modal lebih kecil */
-  .modal-card {
-    width: calc(100vw - 32px) !important;
-    max-width: 360px;
-    padding: 20px 16px !important;
-    border-radius: 20px;
-  }
-
-  .modal-card h3 {
-    font-size: 1.2rem !important;
-  }
-
-  /* Leaderboard modal */
-  #leaderboard-modal .modal-card {
-    width: calc(100vw - 32px) !important;
-  }
-
-  .leaderboard-row {
-    padding: 8px 10px;
-    font-size: 0.85rem;
+    padding: 7px 10px;
+    font-size: 0.78rem;
+    margin-bottom: 5px;
     border-radius: 10px;
   }
 
+  .lobby-bottom-row {
+    gap: 6px;
+    margin-top: 6px;
+  }
+
+  /* Modal compact */
+  .modal-card {
+    width: calc(100vw - 24px) !important;
+    max-width: 480px;
+    padding: 14px 16px !important;
+    border-radius: 16px;
+  }
+
+  .modal-card h3 {
+    font-size: 1rem !important;
+    margin-bottom: 6px !important;
+  }
+
+  .leaderboard-row {
+    padding: 6px 8px;
+    font-size: 0.78rem;
+    border-radius: 8px;
+    margin-bottom: 4px;
+  }
+
   .lb-rank {
-    font-size: 1rem;
-    min-width: 24px;
+    font-size: 0.9rem;
+    min-width: 20px;
   }
 }

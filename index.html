@@ -18,33 +18,43 @@
     <!-- START / AUTH SCENE -->
     <div id="auth-scene">
       <div class="auth-card auth-card--centered">
-        <div class="logo-icon">⚔️</div>
-        <h1 class="auth-title">Arena Clash</h1>
-        <h3 class="auth-subtitle">Welcome</h3>
-        <p class="auth-note">
-          Sign in with your Google account to enter the arena.
-        </p>
+        <!-- Kiri: logo + title (tampil di landscape) -->
+        <div class="auth-left">
+          <div class="logo-icon">⚔️</div>
+          <h1 class="auth-title">Arena Clash</h1>
+          <h3 class="auth-subtitle">Welcome</h3>
+        </div>
+        <!-- Kanan: note + button -->
+        <div class="auth-right">
+          <p class="auth-note">
+            Sign in with your Google account to enter the arena.
+          </p>
 
-        <p
-          id="auth-error"
-          class="auth-msg auth-msg--error"
-          style="display: none"
-        ></p>
-        <p
-          id="auth-success"
-          class="auth-msg auth-msg--success"
-          style="display: none"
-        ></p>
+          <p
+            id="auth-error"
+            class="auth-msg auth-msg--error"
+            style="display: none"
+          ></p>
+          <p
+            id="auth-success"
+            class="auth-msg auth-msg--success"
+            style="display: none"
+          ></p>
 
-        <!-- Google Login Button -->
-        <button type="button" id="google-login-btn" class="auth-cta google-btn">
-          <img
-            src="https://www.gstatic.com/images/branding/product/1x/gsa_64dp.png"
-            alt="Google Icon"
-            class="google-icon-img"
-          />
-          Sign in with Google
-        </button>
+          <!-- Google Login Button -->
+          <button
+            type="button"
+            id="google-login-btn"
+            class="auth-cta google-btn"
+          >
+            <img
+              src="https://www.gstatic.com/images/branding/product/1x/gsa_64dp.png"
+              alt="Google Icon"
+              class="google-icon-img"
+            />
+            Sign in with Google
+          </button>
+        </div>
       </div>
     </div>
 
@@ -87,7 +97,8 @@
     <!-- MAIN MENU SCENE -->
     <div id="menu-scene" style="display: none">
       <div class="menu-card">
-        <div class="menu-top">
+        <!-- Kiri: logo + info user -->
+        <div class="menu-card-left">
           <div class="logo-icon">⚔️</div>
           <h1>Arena Clash</h1>
           <p
@@ -101,7 +112,8 @@
             Points: 0
           </p>
         </div>
-        <div class="menu-actions">
+        <!-- Kanan: tombol aksi -->
+        <div class="menu-card-right">
           <button type="button" id="vs-bot-btn" class="auth-cta menu-btn-play">
             ⚔️ Play vs BOT
           </button>
@@ -131,6 +143,7 @@
             type="button"
             id="logout-btn"
             class="auth-cta auth-cta--secondary"
+            style="width: 100%"
           >
             Log Out
           </button>
