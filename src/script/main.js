@@ -498,6 +498,10 @@ function lockLandscape() {
   if (screen.orientation && screen.orientation.lock) {
     screen.orientation.lock("landscape").catch(() => {});
   }
+  // Request fullscreen to hide browser bar
+  const el = document.documentElement;
+  if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
+  else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
 }
 
 function unlockOrientation() {
