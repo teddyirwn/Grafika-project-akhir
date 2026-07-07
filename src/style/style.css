@@ -581,7 +581,7 @@
 }
 
 /* Mobile landscape - full screen canvas */
-@media (max-width: 900px) and (orientation: landscape) {
+@media (max-height: 500px) and (orientation: landscape) {
   #battle-scene {
     padding: 0;
     overflow: hidden;
@@ -659,7 +659,7 @@
 }
 
 /* Prevent scroll/bounce on mobile */
-@media (max-width: 900px) {
+@media (max-height: 500px), (max-width: 600px) {
   body {
     overflow: hidden;
     position: fixed;
@@ -669,17 +669,16 @@
 }
 
 /* Show rotate overlay in portrait on small screens */
-@media (max-width: 900px) and (orientation: portrait) {
+@media (max-width: 600px) and (orientation: portrait) {
   #rotate-overlay {
     display: flex !important;
   }
 }
 
 /* ============================================
-   MOBILE UI — AUTH / MENU / LOBBY
+   MOBILE UI — AUTH / MENU / LOBBY (portrait)
    ============================================ */
-@media (max-width: 480px) {
-  /* Background gradien lebih menarik di mobile */
+@media (max-width: 480px) and (orientation: portrait) {
   #auth-scene,
   #menu-scene,
   #create-scene,
@@ -694,7 +693,6 @@
     align-items: center;
   }
 
-  /* Card lebih compact di mobile */
   .auth-card,
   .menu-card,
   .lobby-card {
@@ -704,6 +702,39 @@
     padding: 24px 20px 20px 20px;
     box-shadow: 0 8px 32px rgba(22, 31, 23, 0.12);
   }
+}
+
+/* ============================================
+   MOBILE UI — AUTH / MENU / LOBBY (landscape & semua mobile)
+   ============================================ */
+@media (max-height: 500px) and (orientation: landscape) {
+  /* Background gradien lebih menarik di mobile */
+  #auth-scene,
+  #menu-scene,
+  #create-scene,
+  #join-scene {
+    background: radial-gradient(
+      ellipse at top,
+      #e8f5ee 0%,
+      #f0f4f2 60%,
+      #e6edf5 100%
+    );
+    padding: 12px 16px;
+    align-items: center;
+    overflow-y: auto;
+  }
+
+  /* Card lebih compact di mobile landscape */
+  .auth-card,
+  .menu-card,
+  .lobby-card {
+    width: 100%;
+    max-width: 500px;
+    border-radius: 20px;
+    padding: 16px 18px;
+    box-shadow: 0 8px 32px rgba(22, 31, 23, 0.12);
+    margin: auto;
+  }
 
   /* AUTH — Login page */
   .auth-card--centered .logo-icon {
@@ -711,74 +742,79 @@
     margin-bottom: 6px;
   }
 
+  .auth-card--centered .logo-icon {
+    font-size: 1.8rem;
+    margin-bottom: 4px;
+  }
+
   .auth-title {
-    font-size: 22px;
-    margin: 4px 0 2px 0;
+    font-size: 18px;
+    margin: 2px 0 1px 0;
   }
 
   .auth-subtitle {
-    font-size: 0.95rem;
-    margin: 4px 0 6px 0;
+    font-size: 0.85rem;
+    margin: 2px 0 4px 0;
   }
 
   .auth-note {
-    font-size: 0.78rem;
-    line-height: 1.5;
+    font-size: 0.72rem;
+    line-height: 1.4;
     color: #777;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
   }
 
   .google-btn {
-    padding: 12px 16px;
-    font-size: 0.95rem;
-    border-radius: 14px;
-    margin-top: 12px;
+    padding: 10px 14px;
+    font-size: 0.88rem;
+    border-radius: 12px;
+    margin-top: 8px;
     width: 100%;
   }
 
   .google-icon-img {
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
   }
 
-  /* MENU — tombol lebih compact */
+  /* MENU — tombol lebih compact di landscape */
   .menu-card .logo-icon {
-    font-size: 2rem;
-    margin-bottom: 4px;
+    font-size: 1.5rem;
+    margin-bottom: 2px;
   }
 
   .menu-card h1 {
-    font-size: 1.4rem;
-    margin: 4px 0 2px 0;
+    font-size: 1.2rem;
+    margin: 2px 0 2px 0;
   }
 
   #menu-username-display {
-    font-size: 0.9rem !important;
+    font-size: 0.82rem !important;
   }
 
   #menu-score-display {
-    font-size: 0.78rem !important;
-    margin-bottom: 10px !important;
+    font-size: 0.72rem !important;
+    margin-bottom: 6px !important;
   }
 
   .auth-cta {
-    padding: 12px 14px;
-    font-size: 0.95rem;
-    border-radius: 14px;
+    padding: 10px 12px;
+    font-size: 0.88rem;
+    border-radius: 12px;
   }
 
   .menu-btn-play {
-    margin-bottom: 8px;
+    margin-bottom: 6px;
   }
 
   .menu-btn-secondary {
-    font-size: 0.8rem;
-    padding: 10px 8px;
+    font-size: 0.76rem;
+    padding: 8px 6px;
   }
 
   .menu-btn-row {
-    gap: 8px;
-    margin-bottom: 8px;
+    gap: 6px;
+    margin-bottom: 6px;
   }
 
   /* LOBBY — kompak */
