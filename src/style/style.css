@@ -232,8 +232,8 @@
 
 .arena-container {
   position: relative;
-  width: 1024px;
-  max-width: 100vw;
+  width: 100%;
+  max-width: 1024px;
 }
 
 #arena {
@@ -344,8 +344,11 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 15px;
-  width: 1024px;
+  justify-content: center;
+  gap: 0;
+  width: 100%;
+  max-width: 1024px;
+  margin: 0 auto;
 }
 
 .arena-header {
@@ -392,15 +395,14 @@
 
 .arena-container {
   position: relative;
-  width: 1024px;
-  height: 576px;
+  width: 100%;
 }
 
 #arena {
-  border: 4px solid #333;
-  border-radius: 16px;
   background-color: #000;
   display: block;
+  border: none;
+  border-radius: 0;
 }
 
 #game-over-screen {
@@ -538,7 +540,6 @@
   overflow-y: auto;
   max-height: 400px;
   padding-right: 4px;
-}
 }
 
 /* ============================================
@@ -687,45 +688,45 @@
     max-height: 100dvh;
   }
 
-  /* HUD mobile landscape — sesuai layar */
+  /* HUD mobile landscape — lebih besar & terbaca */
   #battle-hud {
-    padding: 4px 8px;
+    padding: 5px 10px;
   }
 
   .hud-player {
     min-width: 0;
-    gap: 3px;
+    gap: 4px;
   }
 
   .hud-name {
-    font-size: 0.72rem;
-    max-width: 90px;
+    font-size: 0.82rem;
+    max-width: 110px;
   }
 
   .hud-health-bar {
-    width: 90px;
-    height: 7px;
-    border-width: 1px;
+    width: 120px;
+    height: 10px;
+    border-width: 1.5px;
   }
 
   #timer-display {
-    font-size: 1.4rem;
-    min-width: 36px;
+    font-size: 1.6rem;
+    min-width: 40px;
   }
 
   #round-label {
-    font-size: 0.6rem;
+    font-size: 0.65rem;
     letter-spacing: 1.5px;
   }
 
   .round-wins {
-    font-size: 0.65rem;
+    font-size: 0.72rem;
     letter-spacing: 3px;
-    margin-top: 1px;
+    margin-top: 2px;
   }
 
   .hud-center {
-    gap: 1px;
+    gap: 2px;
   }
 
   #mobile-controls {
@@ -916,15 +917,13 @@
   /* ---- LOBBY ---- */
   .lobby-card {
     display: flex;
-    flex-direction: row;
-    align-items: flex-start;
-    gap: 16px;
-    width: 92vw;
-    max-width: 720px;
-    padding: 16px 20px;
+    flex-direction: column;
+    width: 88vw;
+    max-width: 480px;
+    padding: 14px 18px;
     border-radius: 18px;
     overflow-y: auto;
-    max-height: 96dvh;
+    max-height: 94dvh;
   }
 
   .lobby-card h2 {
@@ -933,8 +932,12 @@
   }
 
   .lobby-status {
-    font-size: 0.72rem;
+    font-size: 0.75rem;
     margin: 0 0 6px 0;
+  }
+
+  .invite-row {
+    gap: 6px;
   }
 
   .invite-row input,
@@ -944,22 +947,33 @@
   }
 
   .invite-row .auth-cta {
-    padding: 8px 10px !important;
-    font-size: 0.76rem !important;
+    padding: 8px 12px !important;
+    font-size: 0.78rem !important;
     white-space: nowrap;
+    width: auto !important;
+    flex-shrink: 0;
+  }
+
+  #create-players,
+  #join-players {
+    margin: 6px 0;
   }
 
   #create-players li,
   #join-players li {
-    padding: 7px 10px;
-    font-size: 0.78rem;
-    margin-bottom: 5px;
+    padding: 8px 10px;
+    font-size: 0.8rem;
+    margin-bottom: 4px;
     border-radius: 10px;
   }
 
   .lobby-bottom-row {
     gap: 6px;
-    margin-top: 6px;
+    margin-top: 8px;
+  }
+
+  #create-start-btn {
+    margin-top: 8px !important;
   }
 
   /* Modal compact */

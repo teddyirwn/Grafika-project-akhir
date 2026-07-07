@@ -14,6 +14,9 @@ import {
 import * as Network from "./network.js";
 import { supabase } from "../lib/supabase.js";
 
+// User ID cache — diisi saat game start, dipakai untuk awardPoints
+let cachedUserId = null;
+
 const canvas = document.getElementById("arena");
 let ctx = canvas ? canvas.getContext("2d") : null;
 
@@ -72,6 +75,61 @@ const background = new Sprite({
   position: { x: 0, y: 0 },
   imageSrc: "/asset/backgrounds/game_background_2/game_background_2.png",
 });
+
+// === EFEK PARTIKEL ARENA (ember, debu, api kecil) ===
+const particles = [];
+const PARTICLE_COUNT = 22;
+
+function createParticle(randomY = false) {
+  const types = [
+    { color: "255,180,50", size: [1.5, 3] }, // api/ember
+    { color: "200,100,30", size: [1, 2.5] }, // bara
+    { color: "220,220,200", size: [1, 2] }, // debu
+  ];
+  const t = types[Math.floor(Math.random() * types.length)];
+  return {
+    x: Math.random() * CONFIG.canvasWidth,
+    y: randomY ? Math.random() * CONFIG.canvasHeight : CONFIG.canvasHeight + 10,
+    size: t.size[0] + Math.random() * (t.size[1] - t.size[0]),
+    speedY: -(Math.random() * 0.7 + 0.25),
+    speedX: (Math.random() - 0.5) * 0.5,
+    opacity: Math.random() * 0.55 + 0.25,
+    maxOpacity: Math.random() * 0.55 + 0.25,
+    color: t.color,
+    flicker: Math.random() * 0.01 + 0.003,
+  };
+}
+
+function initParticles() {
+  particles.length = 0;
+  for (let i = 0; i < PARTICLE_COUNT; i++) {
+    particles.push(createParticle(true));
+  }
+}
+
+function drawParticles(ctx) {
+  for (const p of particles) {
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, p.opacity);
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(${p.color},1)`;
+    ctx.shadowColor = `rgba(${p.color},0.9)`;
+    ctx.shadowBlur = p.size * 4;
+    ctx.fill();
+    ctx.restore();
+
+    p.x += p.speedX;
+    p.y += p.speedY;
+    p.opacity -= p.flicker;
+
+    if (p.opacity <= 0 || p.y < -10) {
+      Object.assign(p, createParticle(false));
+    }
+  }
+}
+
+initParticles();
 
 const player1 = new Fighter({
   position: { x: 100, y: 0 },
@@ -193,21 +251,23 @@ function animate() {
   // === NETWORK INTERPOLASI untuk lawan di multiplayer ===
   if (!window.isBotMode && window.roomCode) {
     if (window.localRole === "p2") {
+      // Lerp 0.5 agar tidak terlihat menyeret
       player1.position.x +=
-        (Network.p1NetworkTarget.x - player1.position.x) * 0.3;
+        (Network.p1NetworkTarget.x - player1.position.x) * 0.5;
       player1.position.y +=
-        (Network.p1NetworkTarget.y - player1.position.y) * 0.3;
+        (Network.p1NetworkTarget.y - player1.position.y) * 0.5;
     }
     if (window.localRole === "p1") {
       player2.position.x +=
-        (Network.p2NetworkTarget.x - player2.position.x) * 0.3;
+        (Network.p2NetworkTarget.x - player2.position.x) * 0.5;
       player2.position.y +=
-        (Network.p2NetworkTarget.y - player2.position.y) * 0.3;
+        (Network.p2NetworkTarget.y - player2.position.y) * 0.5;
     }
   }
 
   // === RENDER ===
   background.update(ctx);
+  drawParticles(ctx);
   player1.update(ctx, canvas.height);
   player2.update(ctx, canvas.height);
 
@@ -278,6 +338,11 @@ function animate() {
 }
 
 function startGame() {
+  // Cache user ID sekali saat game mulai
+  supabase.auth.getSession().then(({ data }) => {
+    cachedUserId = data?.session?.user?.id || null;
+  });
+
   // Simpan status battle ke sessionStorage agar tahan refresh
   sessionStorage.setItem("inBattle", "true");
   sessionStorage.setItem(
@@ -716,29 +781,21 @@ function stopTimer() {
 
 async function awardPoints(winnerRole, loserRole) {
   try {
-    // Helper: get user ID by username or current user
+    // Helper: get user ID by username atau dari cache
     async function getUserId(role) {
       if (window.isBotMode) {
-        if (role === "p1") {
-          // Bot mode: P1 is the logged-in user
-          const {
-            data: { user },
-          } = await supabase.auth.getUser();
-          console.log("[POINTS] Bot mode user:", user?.id, user?.email);
-          return user?.id;
-        }
-        return null; // Bot has no account
+        // Bot mode: P1 selalu user yang login, P2 adalah bot (null)
+        if (role === "p1") return cachedUserId || null;
+        return null; // Bot tidak punya akun
       }
       const username = role === "p1" ? player1Name : player2Name;
-      console.log("[POINTS] Looking up user ID for username:", username);
       const { data, error } = await supabase
         .from("profiles")
         .select("id")
         .eq("username", username)
         .single();
       if (error) console.error("[POINTS] getUserId error:", error.message);
-      console.log("[POINTS] Found user ID:", data?.id);
-      return data?.id;
+      return data?.id || null;
     }
 
     const winnerId = await getUserId(winnerRole);
