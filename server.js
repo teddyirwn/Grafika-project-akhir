@@ -17,11 +17,24 @@ io.on("connection", (socket) => {
   socket.on("join_room", ({ code, username, role }) => {
     if (!code || !username) return;
 
-    socket.join(code);
     if (!rooms[code]) rooms[code] = [];
 
     // Hapus data lama jika username ini sudah ada (untuk handle refresh page)
-    rooms[code] = rooms[code].filter((p) => p.username !== username);
+    const existingIdx = rooms[code].findIndex((p) => p.username === username);
+    if (existingIdx !== -1) {
+      rooms[code].splice(existingIdx, 1);
+    }
+
+    // Tolak jika room sudah penuh (2 player) dan bukan reconnect
+    if (rooms[code].length >= 2) {
+      console.log(
+        `[LOBBY PENUH] ${username} ditolak masuk room [${code}] — sudah 2 player`,
+      );
+      socket.emit("room_full", { code });
+      return;
+    }
+
+    socket.join(code);
 
     // Masukkan player baru ke dalam database room server
     rooms[code].push({ id: socket.id, username, role });

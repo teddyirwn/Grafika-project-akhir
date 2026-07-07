@@ -54,6 +54,19 @@ export function setupRoomChannel(
 
   // Send join event AFTER listeners are registered
   socket.emit("join_room", { code, username, role: window.localRole });
+
+  // Handle room full
+  socket.off("room_full").on("room_full", ({ code: fullCode }) => {
+    if (fullCode !== code) return;
+    alert(`Room ${fullCode} sudah penuh (2 player). Coba room lain.`);
+    // Kembali ke menu
+    const joinScene = document.getElementById("join-scene");
+    const menuScene = document.getElementById("menu-scene");
+    if (joinScene) joinScene.style.display = "none";
+    if (menuScene) menuScene.style.display = "flex";
+    window.roomCode = null;
+    window.localRole = null;
+  });
 }
 
 export function setupNetworkReceiver(
