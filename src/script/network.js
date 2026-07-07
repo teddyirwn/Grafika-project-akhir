@@ -76,12 +76,33 @@ export function setupNetworkReceiver(
   player2Health,
   onWinnerCheck,
 ) {
+  // Track apakah lawan sedang attack di frame sebelumnya
+  // untuk cegah attack() dipanggil berulang setiap frame
+  let p1WasAttacking = false;
+  let p2WasAttacking = false;
+
   socket.off("p1_sync").on("p1_sync", (payload) => {
     if (window.localRole === "p2") {
       p1NetworkTarget = payload.position;
       player1.facing = payload.facing;
       player1.dead = payload.dead;
-      if (payload.isAttacking && !player1.isAttacking) player1.attack();
+
+      // Trigger attack hanya saat transisi false -> true
+      if (payload.isAttacking && !p1WasAttacking) {
+        player1.attack();
+      }
+      p1WasAttacking = payload.isAttacking;
+
+      // Sinkronisasi sprite berdasarkan velocity dan state
+      if (!player1.dead && !player1.isAttacking) {
+        if (payload.velocity && Math.abs(payload.velocity.x) > 0.5) {
+          player1.switchSprite("run");
+        } else if (payload.velocity && payload.velocity.y < -1) {
+          player1.switchSprite("jump");
+        } else {
+          player1.switchSprite("idle");
+        }
+      }
     }
   });
 
@@ -90,7 +111,23 @@ export function setupNetworkReceiver(
       p2NetworkTarget = payload.position;
       player2.facing = payload.facing;
       player2.dead = payload.dead;
-      if (payload.isAttacking && !player2.isAttacking) player2.attack();
+
+      // Trigger attack hanya saat transisi false -> true
+      if (payload.isAttacking && !p2WasAttacking) {
+        player2.attack();
+      }
+      p2WasAttacking = payload.isAttacking;
+
+      // Sinkronisasi sprite berdasarkan velocity dan state
+      if (!player2.dead && !player2.isAttacking) {
+        if (payload.velocity && Math.abs(payload.velocity.x) > 0.5) {
+          player2.switchSprite("run");
+        } else if (payload.velocity && payload.velocity.y < -1) {
+          player2.switchSprite("jump");
+        } else {
+          player2.switchSprite("idle");
+        }
+      }
     }
   });
 
