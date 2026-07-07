@@ -24,7 +24,7 @@
 .menu-card,
 .lobby-card {
   width: 380px;
-  max-width: calc(100% - 40px);
+  max-width: calc(100% - 32px);
   background: white;
   border-radius: 28px;
   padding: 30px 28px;
@@ -60,6 +60,7 @@
 .logo-icon {
   font-size: 3rem;
   margin-bottom: 10px;
+  line-height: 1;
 }
 
 .auth-title {
@@ -404,7 +405,8 @@
   background: white !important;
   color: #3c4043 !important;
   border: 1px solid #dadce0 !important;
-  margin: 20px auto 0 auto;
+  margin: 16px auto 0 auto;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
 }
 
 .google-icon-img {
@@ -578,7 +580,6 @@
   color: white;
 }
 
-
 /* Mobile landscape - full screen canvas */
 @media (max-width: 900px) and (orientation: landscape) {
   #battle-scene {
@@ -586,7 +587,7 @@
     overflow: hidden;
   }
 
-    .arena-wrapper {
+  .arena-wrapper {
     justify-content: center;
     height: 100dvh;
   }
@@ -602,30 +603,45 @@
     max-height: 100dvh;
   }
 
+  /* HUD kecil di mobile landscape */
+  #battle-hud {
+    padding: 3px 6px;
+  }
+
+  .hud-player {
+    min-width: 0;
+    gap: 2px;
+  }
+
   .hud-name {
-    font-size: 0.7rem;
-    max-width: 90px;
+    font-size: 0.55rem;
+    max-width: 70px;
   }
 
   .hud-health-bar {
-    width: 90px;
-    height: 8px;
+    width: 70px;
+    height: 5px;
+    border-width: 1px;
   }
 
   #timer-display {
-    font-size: 1.2rem;
+    font-size: 0.95rem;
+    min-width: 28px;
   }
 
   #round-label {
-    font-size: 0.6rem;
+    font-size: 0.45rem;
+    letter-spacing: 1px;
   }
 
   .round-wins {
-    font-size: 0.7rem;
+    font-size: 0.5rem;
+    letter-spacing: 2px;
+    margin-top: 1px;
   }
 
-  #battle-hud {
-    padding: 4px 8px;
+  .hud-center {
+    gap: 1px;
   }
 
   #mobile-controls {
@@ -634,10 +650,11 @@
 
   #game-over-screen {
     padding: 14px;
+    min-width: 200px;
   }
 
   #game-over-screen h1 {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
   }
 }
 
@@ -655,5 +672,175 @@
 @media (max-width: 900px) and (orientation: portrait) {
   #rotate-overlay {
     display: flex !important;
+  }
+}
+
+/* ============================================
+   MOBILE UI — AUTH / MENU / LOBBY
+   ============================================ */
+@media (max-width: 480px) {
+  /* Background gradien lebih menarik di mobile */
+  #auth-scene,
+  #menu-scene,
+  #create-scene,
+  #join-scene {
+    background: radial-gradient(
+      ellipse at top,
+      #e8f5ee 0%,
+      #f0f4f2 60%,
+      #e6edf5 100%
+    );
+    padding: 16px;
+    align-items: center;
+  }
+
+  /* Card lebih compact di mobile */
+  .auth-card,
+  .menu-card,
+  .lobby-card {
+    width: 100%;
+    max-width: 360px;
+    border-radius: 24px;
+    padding: 24px 20px 20px 20px;
+    box-shadow: 0 8px 32px rgba(22, 31, 23, 0.12);
+  }
+
+  /* AUTH — Login page */
+  .auth-card--centered .logo-icon {
+    font-size: 2.6rem;
+    margin-bottom: 6px;
+  }
+
+  .auth-title {
+    font-size: 22px;
+    margin: 4px 0 2px 0;
+  }
+
+  .auth-subtitle {
+    font-size: 0.95rem;
+    margin: 4px 0 6px 0;
+  }
+
+  .auth-note {
+    font-size: 0.78rem;
+    line-height: 1.5;
+    color: #777;
+    margin-bottom: 8px;
+  }
+
+  .google-btn {
+    padding: 12px 16px;
+    font-size: 0.95rem;
+    border-radius: 14px;
+    margin-top: 12px;
+    width: 100%;
+  }
+
+  .google-icon-img {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* MENU — tombol lebih compact */
+  .menu-card .logo-icon {
+    font-size: 2rem;
+    margin-bottom: 4px;
+  }
+
+  .menu-card h1 {
+    font-size: 1.4rem;
+    margin: 4px 0 2px 0;
+  }
+
+  #menu-username-display {
+    font-size: 0.9rem !important;
+  }
+
+  #menu-score-display {
+    font-size: 0.78rem !important;
+    margin-bottom: 10px !important;
+  }
+
+  .auth-cta {
+    padding: 12px 14px;
+    font-size: 0.95rem;
+    border-radius: 14px;
+  }
+
+  .menu-btn-play {
+    margin-bottom: 8px;
+  }
+
+  .menu-btn-secondary {
+    font-size: 0.8rem;
+    padding: 10px 8px;
+  }
+
+  .menu-btn-row {
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  /* LOBBY — kompak */
+  .lobby-card h2 {
+    font-size: 1.2rem;
+    margin: 0 0 6px 0;
+  }
+
+  .lobby-status {
+    font-size: 0.82rem;
+    margin: 0 0 10px 0;
+  }
+
+  .invite-row input,
+  #join-code-input {
+    padding: 11px 14px;
+    font-size: 0.9rem;
+  }
+
+  .invite-row .auth-cta {
+    padding: 10px 12px !important;
+    font-size: 0.82rem !important;
+    white-space: nowrap;
+  }
+
+  #create-players li,
+  #join-players li {
+    padding: 10px 12px;
+    font-size: 0.88rem;
+    border-radius: 12px;
+  }
+
+  .lobby-bottom-row {
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  /* Modal lebih kecil */
+  .modal-card {
+    width: calc(100vw - 32px) !important;
+    max-width: 360px;
+    padding: 20px 16px !important;
+    border-radius: 20px;
+  }
+
+  .modal-card h3 {
+    font-size: 1.2rem !important;
+  }
+
+  /* Leaderboard modal */
+  #leaderboard-modal .modal-card {
+    width: calc(100vw - 32px) !important;
+  }
+
+  .leaderboard-row {
+    padding: 8px 10px;
+    font-size: 0.85rem;
+    border-radius: 10px;
+  }
+
+  .lb-rank {
+    font-size: 1rem;
+    min-width: 24px;
   }
 }
