@@ -73,8 +73,9 @@ io.on("connection", (socket) => {
   });
 });
 
-httpServer.listen(3000, "0.0.0.0", () => {
+const PORT = process.env.PORT || 3000;
+httpServer.listen(PORT, "0.0.0.0", () => {
   console.log("===================================================");
-  console.log("🚀 Server Multiplayer Socket.io jalan di port 3000");
+  console.log(`🚀 Socket.io server running on port ${PORT}`);
   console.log("===================================================");
 });
