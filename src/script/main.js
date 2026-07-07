@@ -905,3 +905,44 @@ function winnerCheck({ player1, player2 }) {
   else if (player2.health <= 0 && player1.health > 0) p1RoundWins++;
   showRoundResult();
 }
+
+const fullscreenBtn = document.getElementById("fullscreen-btn");
+
+if (fullscreenBtn) {
+  fullscreenBtn.addEventListener("click", () => {
+    const elem = document.documentElement; // Mengambil seluruh layar web
+
+    // Cek apakah web sedang dalam mode fullscreen atau tidak
+    if (
+      !document.fullscreenElement &&
+      !document.webkitFullscreenElement &&
+      !document.msFullscreenElement
+    ) {
+      // Request masuk Fullscreen (Mendukung Multi-browser)
+      if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+      } else if (elem.webkitRequestFullscreen) {
+        /* Safari / iOS */
+        elem.webkitRequestFullscreen();
+      } else if (elem.msRequestFullscreen) {
+        /* IE / Edge */
+        elem.msRequestFullscreen();
+      }
+
+      fullscreenBtn.innerText = "📺 Exit Fullscreen";
+      fullscreenBtn.style.backgroundColor = "#e74c3c"; // Ubah warna jadi merah saat aktif
+    } else {
+      // Keluar dari mode Fullscreen
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      } else if (document.msExitFullscreen) {
+        document.msExitFullscreen();
+      }
+
+      fullscreenBtn.innerText = "📺 Go Fullscreen";
+      fullscreenBtn.style.backgroundColor = "#2980b9"; // Kembalikan ke warna biru
+    }
+  });
+}

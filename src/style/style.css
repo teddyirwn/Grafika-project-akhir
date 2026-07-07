@@ -1036,3 +1036,15 @@
     font-size: 0.8rem;
   }
 }
+
+/* Secara default, sembunyikan tombol di layar Desktop / Laptop */
+.mobile-only {
+  display: none !important;
+}
+
+/* Tampilkan tombol HANYA jika dibuka di HP / perangkat layar sentuh */
+@media (max-width: 1024px) or (pointer: coarse) {
+  .mobile-only {
+    display: block !important;
+  }
+}
