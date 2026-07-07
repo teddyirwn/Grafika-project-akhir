@@ -251,17 +251,21 @@ function animate() {
   // === NETWORK INTERPOLASI untuk lawan di multiplayer ===
   if (!window.isBotMode && window.roomCode) {
     if (window.localRole === "p2") {
-      // Lerp 0.5 agar tidak terlihat menyeret
-      player1.position.x +=
-        (Network.p1NetworkTarget.x - player1.position.x) * 0.5;
-      player1.position.y +=
-        (Network.p1NetworkTarget.y - player1.position.y) * 0.5;
+      const dx1 = Network.p1NetworkTarget.x - player1.position.x;
+      const dy1 = Network.p1NetworkTarget.y - player1.position.y;
+      const dist1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
+      // Snap langsung kalau jarak terlalu jauh, lerp kalau dekat
+      const factor1 = dist1 > 80 ? 1.0 : dist1 > 30 ? 0.7 : 0.5;
+      player1.position.x += dx1 * factor1;
+      player1.position.y += dy1 * factor1;
     }
     if (window.localRole === "p1") {
-      player2.position.x +=
-        (Network.p2NetworkTarget.x - player2.position.x) * 0.5;
-      player2.position.y +=
-        (Network.p2NetworkTarget.y - player2.position.y) * 0.5;
+      const dx2 = Network.p2NetworkTarget.x - player2.position.x;
+      const dy2 = Network.p2NetworkTarget.y - player2.position.y;
+      const dist2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+      const factor2 = dist2 > 80 ? 1.0 : dist2 > 30 ? 0.7 : 0.5;
+      player2.position.x += dx2 * factor2;
+      player2.position.y += dy2 * factor2;
     }
   }
 
@@ -708,20 +712,28 @@ joystickBase?.addEventListener(
 
 // ---- ATTACK BUTTON ----
 const btnAttack = document.getElementById("btn-attack");
+let attackCooldown = false; // Guard agar serangan tidak berulang
 btnAttack?.addEventListener(
   "touchstart",
   (e) => {
     e.preventDefault();
-    if (!gameActive) return;
+    if (!gameActive || attackCooldown) return;
     const p = getLocalPlayer();
     if (p && !p.isAttacking) {
+      attackCooldown = true;
       p.attack();
       const snd =
         window.localRole === "p2" && !window.isBotMode
           ? skill1Sound2
           : skill1Sound1;
-      snd.currentTime = 0;
-      snd.play().catch(() => {});
+      if (snd) {
+        snd.currentTime = 0;
+        snd.play().catch(() => {});
+      }
+      // Reset cooldown setelah animasi attack selesai (~400ms)
+      setTimeout(() => {
+        attackCooldown = false;
+      }, 400);
     }
   },
   { passive: false },
