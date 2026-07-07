@@ -548,11 +548,11 @@ function getLocalPlayer() {
 function setJoystickKnobPos(dx, dy) {
   const cx = Math.max(-JOYSTICK_RADIUS, Math.min(JOYSTICK_RADIUS, dx));
   const cy = Math.max(-JOYSTICK_RADIUS, Math.min(JOYSTICK_RADIUS, dy));
-  joystickKnob.style.transform = `translate(px, px)`;
+  joystickKnob.style.transform = "translate(calc(-50% + " + cx + "px), calc(-50% + " + cy + "px))";
 }
 
 function resetJoystick() {
-  joystickKnob.style.transform = "translate(0, 0)";
+  joystickKnob.style.transform = "translate(-50%, -50%)";
   keys.a.pressed = false;
   keys.d.pressed = false;
   lastKeyP1 = "";

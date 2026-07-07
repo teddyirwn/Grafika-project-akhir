@@ -535,10 +535,10 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  margin-left: -25px;
-  margin-top: -25px;
+  transform: translate(-50%, -50%);
   pointer-events: none;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  transition: transform 0.05s ease;
 }
 
 /* Attack button - right side only */
