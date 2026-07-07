@@ -1036,7 +1036,7 @@
 }
 
 /* Tampilkan tombol HANYA jika dibuka di HP / perangkat layar sentuh */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .mobile-only {
     display: block !important;
   }
