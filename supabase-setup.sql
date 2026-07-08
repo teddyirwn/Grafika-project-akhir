@@ -9,6 +9,7 @@
 create table if not exists public.profiles (
   id          uuid        primary key references auth.users (id) on delete cascade,
   username    text        not null unique,
+  points      integer     not null default 0,
   created_at  timestamptz not null default now()
 );
 
@@ -59,6 +60,29 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
+
+-- ============================================================
+-- 3. INCREMENT POINTS FUNCTION
+--    Called after a match is won to award +20 points.
+--    Usage: supabase.rpc('increment_points', { user_id, points_to_add })
+-- ============================================================
+create or replace function public.increment_points(
+  user_id      uuid,
+  points_to_add integer
+)
+returns void
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  update public.profiles
+  set points = points + points_to_add
+  where id = user_id;
+end;
+$$;
+
+-- Allow any authenticated user to call this function
+grant execute on function public.increment_points(uuid, integer) to authenticated;
 
 
 -- ============================================================

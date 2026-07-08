@@ -1,37 +1,18 @@
-// ---------------------------------------------------------------------------
-// auth.js  –  Arena Clash authentication layer (Supabase)
-//
-// Responsibilities:
-//   • Login  : supabase.auth.signInWithPassword
-//   • Register: supabase.auth.signUp  +  insert into public.profiles
-//   • Logout  : supabase.auth.signOut
-//   • Session restore on page load (onAuthStateChange)
-//   • Lobby   : invite-code system (invite_codes table) + real-time presence
-// ---------------------------------------------------------------------------
-
 import { supabase } from "../lib/supabase.js";
+import { setupRoomChannel, sendStartGameSignal } from "./network.js";
 
-// ── DOM refs ──────────────────────────────────────────────────────────────────
 const authScene = document.getElementById("auth-scene");
-const loginForm = document.getElementById("login-form");
-const signupForm = document.getElementById("signup-form");
-const authToggleLink = document.getElementById("auth-toggle-link");
-const authModeLabel = document.getElementById("auth-mode");
-const authError = document.getElementById("auth-error");
-const authSuccess = document.getElementById("auth-success");
-
 const menuScene = document.getElementById("menu-scene");
 const createScene = document.getElementById("create-scene");
 const joinScene = document.getElementById("join-scene");
+const battleScene = document.getElementById("battle-scene");
+
 const createPlayers = document.getElementById("create-players");
+const joinPlayers = document.getElementById("join-players");
 const inviteCodeInput = document.getElementById("invite-code");
-const copyInviteBtn = document.getElementById("copy-invite");
-const simulateJoinBtn = document.getElementById("simulate-join");
 const createStartBtn = document.getElementById("create-start-btn");
 const joinRoomBtn = document.getElementById("join-room-btn");
 const joinCodeInput = document.getElementById("join-code-input");
-const createBackBtn = document.getElementById("create-back-btn");
-const joinBackBtn = document.getElementById("join-back-btn");
 const logoutBtn = document.getElementById("logout-btn");
 const createUsername = document.getElementById("create-username");
 const joinUsername = document.getElementById("join-username");
@@ -40,191 +21,269 @@ const loginBtn = document.getElementById("login-btn");
 const signupBtn = document.getElementById("signup-btn");
 const createBtn = document.getElementById("create-btn");
 const joinBtn = document.getElementById("join-btn");
-const battleScene = document.getElementById("battle-scene");
+const vsBotBtn = document.getElementById("vs-bot-btn");
+const googleLoginBtn = document.getElementById("google-login-btn");
 
-// ── State ────────────────────────────────────────────────────────────────────
-let currentUser = null; // Supabase User object
-let currentProfile = null; // row from public.profiles
-let players = []; // [{name, id}]  in current lobby
-let inviteCode = null;
+const registerConfirmModal = document.getElementById("register-confirm-modal");
+const confirmRegisterBtn = document.getElementById("confirm-register-btn");
+const oauthUsernameInput = document.getElementById("oauth-username");
 
-// ── Utility: show / hide feedback messages ────────────────────────────────────
-function showError(msg) {
-  if (!authError) return;
-  authError.textContent = msg;
-  authError.style.display = "block";
-  if (authSuccess) authSuccess.style.display = "none";
-}
-function showSuccess(msg) {
-  if (!authSuccess) return;
-  authSuccess.textContent = msg;
-  authSuccess.style.display = "block";
-  if (authError) authError.style.display = "none";
-}
-function clearMessages() {
-  if (authError) authError.style.display = "none";
-  if (authSuccess) authSuccess.style.display = "none";
-}
+let currentUser = null;
+let currentProfile = null;
+let sessionHandled = false; // Guard agar handleSession tidak dipanggil duplikat
 
-// ── Utility: button loading state ─────────────────────────────────────────────
-function setLoading(btn, loading) {
-  if (!btn) return;
-  btn.disabled = loading;
-  btn.dataset.origText = btn.dataset.origText || btn.textContent;
-  btn.textContent = loading ? "Loading…" : btn.dataset.origText;
-}
-
-// ── Auth mode toggle (login ↔ signup) ─────────────────────────────────────────
-function setAuthMode(mode) {
-  clearMessages();
-  if (mode === "signup") {
-    loginForm.style.display = "none";
-    signupForm.style.display = "block";
-    if (authModeLabel) authModeLabel.innerText = "Sign Up";
-    if (authToggleLink) authToggleLink.innerText = "Click here to login.";
-  } else {
-    loginForm.style.display = "block";
-    signupForm.style.display = "none";
-    if (authModeLabel) authModeLabel.innerText = "Sign In";
-    if (authToggleLink) authToggleLink.innerText = "Click here to register.";
-  }
-}
-
-authToggleLink?.addEventListener("click", (e) => {
-  e.preventDefault();
-  const isSignup = signupForm.style.display === "block";
-  setAuthMode(isSignup ? "login" : "signup");
-});
-
-// Default view
-setAuthMode("login");
-
-// ── LOGIN ─────────────────────────────────────────────────────────────────────
-document.getElementById("login-btn")?.addEventListener("click", async () => {
-  clearMessages();
-  const email = document.getElementById("login-email")?.value?.trim();
-  const password = document.getElementById("login-password")?.value;
-
-  if (!email || !password) {
-    showError("Please fill in email and password.");
-    return;
-  }
-
-  const loginBtn = document.getElementById("login-btn");
-  setLoading(loginBtn, true);
-
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
+googleLoginBtn?.addEventListener("click", async () => {
+  await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: { redirectTo: window.location.origin + "/" },
   });
-
-  setLoading(loginBtn, false);
-
-  if (error) {
-    showError(error.message);
-    return;
-  }
-
-  // onAuthStateChange will call loginSuccess automatically
-  // but we call it manually here too for immediate feedback
-  if (data?.user) {
-    await handleSession(data.user);
-  }
 });
 
-// ── FORGOT PASSWORD ───────────────────────────────────────────────────────────
-document.getElementById("forgot-link")?.addEventListener("click", async (e) => {
-  e.preventDefault();
-  const email = document.getElementById("login-email")?.value?.trim();
-  if (!email) {
-    showError("Enter your email first, then click Forgot Password.");
-    return;
-  }
-  const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: window.location.origin,
-  });
-  if (error) showError(error.message);
-  else showSuccess("Password reset email sent! Check your inbox.");
-});
-
-// ── REGISTER ──────────────────────────────────────────────────────────────────
-document.getElementById("signup-btn")?.addEventListener("click", async () => {
-  clearMessages();
-  const username = document.getElementById("signup-username")?.value?.trim();
-  const email = document.getElementById("signup-email")?.value?.trim();
-  const password = document.getElementById("signup-password")?.value;
-
-  if (!username || !email || !password) {
-    showError("Please fill in all fields.");
-    return;
-  }
-  if (username.length < 2) {
-    showError("Username must be at least 2 characters.");
-    return;
-  }
-  if (password.length < 6) {
-    showError("Password must be at least 6 characters.");
-    return;
-  }
-
-  const signupBtn = document.getElementById("signup-btn");
-  setLoading(signupBtn, true);
-
-  // 1. Create auth user
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      // Save username in auth metadata so we can read it in the trigger/callback
-      data: { username },
-    },
-  });
-
-  if (error) {
-    setLoading(signupBtn, false);
-    showError(error.message);
-    return;
-  }
-
-  // 2. If email confirmation is disabled (Supabase project setting), the user
-  //    is returned immediately and we insert the profile row.
-  //    If confirmation is enabled, data.user is null and we show a message.
-  if (data?.user) {
-    await upsertProfile(data.user.id, username);
-    setLoading(signupBtn, false);
-    await handleSession(data.user);
-  } else {
-    setLoading(signupBtn, false);
-    showSuccess(
-      "Registration successful! Check your email to confirm your account.",
-    );
-    setAuthMode("login");
-  }
-});
-
-// ── Session helpers ───────────────────────────────────────────────────────────
-
-/**
- * Fetch or create the profile row for the logged-in user.
- * public.profiles schema:
- *   id        uuid  (references auth.users.id)
- *   username  text  NOT NULL UNIQUE
- *   created_at timestamptz
- */
-async function upsertProfile(userId, username) {
-  const { error } = await supabase
-    .from("profiles")
-    .upsert({ id: userId, username }, { onConflict: "id" });
-
-  if (error) console.warn("[auth] upsertProfile error:", error.message);
-}
-
-async function fetchProfile(userId) {
-  const { data, error } = await supabase
+async function handleSession(user) {
+  currentUser = user;
+  const { data: profile, error } = await supabase
     .from("profiles")
     .select("username")
-    .eq("id", userId)
+    .eq("id", user.id)
     .single();
+
+  if (error && error.code !== "PGRST116") {
+    console.error("[Auth] Failed to fetch profile:", error.message);
+    return;
+  }
+
+  if (!profile) {
+    if (authScene) authScene.style.display = "none";
+    if (registerConfirmModal) registerConfirmModal.style.display = "flex";
+    const googleName = user.user_metadata?.full_name?.split(" ")[0] || "User";
+    if (oauthUsernameInput)
+      oauthUsernameInput.value = googleName.substring(0, 12);
+  } else {
+    // Fetch points terpisah — agar tidak crash jika kolom belum ada
+    let points = 0;
+    try {
+      const { data: pointsData } = await supabase
+        .from("profiles")
+        .select("points")
+        .eq("id", user.id)
+        .single();
+      if (pointsData?.points !== undefined) points = pointsData.points;
+    } catch (_) {}
+
+    currentProfile = { ...profile, points };
+
+    // Cek apakah user sedang dalam pertarungan sebelum refresh
+    const inBattle = sessionStorage.getItem("inBattle");
+    const battleMode = sessionStorage.getItem("battleMode");
+    const battleRole = sessionStorage.getItem("battleRole");
+
+    if (inBattle === "true") {
+      // Pulihkan state sebelum refresh
+      window.isBotMode = battleMode === "bot";
+      window.localRole = battleRole;
+
+      // Sembunyikan semua scene UI
+      if (authScene) authScene.style.display = "none";
+      if (menuScene) menuScene.style.display = "none";
+      if (createScene) createScene.style.display = "none";
+      if (joinScene) joinScene.style.display = "none";
+
+      // Langsung tampilkan battle scene dan mulai game
+      if (battleScene) battleScene.style.display = "flex";
+      if (window.startGame) {
+        window.startGame();
+      } else {
+        // startGame belum siap, tunggu sebentar
+        setTimeout(() => {
+          if (window.startGame) window.startGame();
+        }, 200);
+      }
+    } else {
+      enterMainMenu(profile.username);
+    }
+  }
+}
+
+function enterMainMenu(username) {
+  // Bersihkan flag battle saat masuk menu agar tidak terjebak loop ke battle
+  sessionStorage.removeItem("inBattle");
+  sessionStorage.removeItem("battleMode");
+  sessionStorage.removeItem("battleRole");
+
+  if (authScene) authScene.style.display = "none";
+  if (registerConfirmModal) registerConfirmModal.style.display = "none";
+  if (menuScene) menuScene.style.display = "flex";
+  if (createUsername) createUsername.innerText = username;
+  if (joinUsername) joinUsername.innerText = username;
+
+  // Tampilkan username dan score di menu
+  const menuUsernameEl = document.getElementById("menu-username-display");
+  const menuScoreEl = document.getElementById("menu-score-display");
+  if (menuUsernameEl) menuUsernameEl.innerText = username;
+  if (menuScoreEl)
+    menuScoreEl.innerText = `Points: ${currentProfile?.points ?? 0}`;
+}
+
+confirmRegisterBtn?.addEventListener("click", async () => {
+  const username = oauthUsernameInput.value.trim();
+  if (username.length < 2) return alert("Minimal 2 karakter");
+  if (!currentUser) return alert("Sesi tidak valid, silakan login ulang.");
+
+  const { error } = await supabase
+    .from("profiles")
+    .insert({ id: currentUser.id, username });
+  if (error) {
+    alert(error.message);
+  } else {
+    currentProfile = { username };
+    enterMainMenu(username);
+  }
+});
+
+// Tombol "Tidak" — tutup modal dan kembali ke halaman login
+const cancelRegisterBtn = document.getElementById("cancel-register-btn");
+cancelRegisterBtn?.addEventListener("click", async () => {
+  // Sign out agar sesi OAuth tidak menggantung
+  await supabase.auth.signOut();
+  if (registerConfirmModal) registerConfirmModal.style.display = "none";
+  showLoginPage();
+});
+
+logoutBtn?.addEventListener("click", async () => {
+  await supabase.auth.signOut();
+  // Langsung reset UI tanpa bergantung pada event SIGNED_OUT
+  currentUser = null;
+  currentProfile = null;
+  sessionHandled = false;
+  showLoginPage();
+});
+
+async function initAuth() {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (session?.user) {
+    await handleSession(session.user);
+  } else {
+    showLoginPage();
+  }
+
+  supabase.auth.onAuthStateChange(async (event, session) => {
+    if (event === "SIGNED_IN" && session?.user) {
+      await handleSession(session.user);
+    }
+    if (event === "SIGNED_OUT") {
+      currentUser = null;
+      currentProfile = null;
+      showLoginPage();
+    }
+  });
+}
+
+function showLoginPage() {
+  // Bersihkan flag battle saat logout
+  sessionStorage.removeItem("inBattle");
+  sessionStorage.removeItem("battleMode");
+  sessionStorage.removeItem("battleRole");
+
+  if (menuScene) menuScene.style.display = "none";
+  if (createScene) createScene.style.display = "none";
+  if (joinScene) joinScene.style.display = "none";
+  if (battleScene) battleScene.style.display = "none";
+  if (registerConfirmModal) registerConfirmModal.style.display = "none";
+  if (authScene) authScene.style.display = "flex";
+}
+
+// Copy invite code button
+const copyInviteBtn = document.getElementById("copy-invite");
+copyInviteBtn?.addEventListener("click", () => {
+  const code = inviteCodeInput?.value;
+  if (!code) return;
+  navigator.clipboard
+    .writeText(code)
+    .then(() => {
+      const feedback = document.getElementById("copy-feedback");
+      if (feedback) {
+        feedback.innerText = "✅ Code copied to clipboard!";
+        setTimeout(() => {
+          feedback.innerText = "";
+        }, 2000);
+      }
+    })
+    .catch(() => {
+      // Fallback for browsers without clipboard API
+      inviteCodeInput.select();
+      document.execCommand("copy");
+      const feedback = document.getElementById("copy-feedback");
+      if (feedback) {
+        feedback.innerText = "✅ Code copied!";
+        setTimeout(() => {
+          feedback.innerText = "";
+        }, 2000);
+      }
+    });
+});
+
+// Leaderboard dengan pagination
+const leaderboardBtn = document.getElementById("leaderboard-btn");
+const leaderboardModal = document.getElementById("leaderboard-modal");
+const closeLeaderboardBtn = document.getElementById("close-leaderboard-btn");
+
+const LB_PAGE_SIZE = 5;
+let lbAllData = [];
+let lbCurrentPage = 0;
+
+function renderLeaderboardPage() {
+  const listEl = document.getElementById("leaderboard-list");
+  const pageInfo = document.getElementById("lb-page-info");
+  const prevBtn = document.getElementById("lb-prev-btn");
+  const nextBtn = document.getElementById("lb-next-btn");
+  if (!listEl) return;
+
+  const totalPages = Math.ceil(lbAllData.length / LB_PAGE_SIZE);
+  const start = lbCurrentPage * LB_PAGE_SIZE;
+  const pageData = lbAllData.slice(start, start + LB_PAGE_SIZE);
+  const medals = ["🥇", "🥈", "🥉"];
+
+  listEl.innerHTML = pageData
+    .map((p, i) => {
+      const globalIndex = start + i;
+      const isCurrentUser = p.username === currentProfile?.username;
+      const medal = medals[globalIndex] || `${globalIndex + 1}.`;
+      return `<div class="leaderboard-row${isCurrentUser ? " leaderboard-row--me" : ""}">
+        <span class="lb-rank">${medal}</span>
+        <span class="lb-username">${p.username}${isCurrentUser ? " (You)" : ""}</span>
+        <span class="lb-points">${p.points ?? 0} pts</span>
+      </div>`;
+    })
+    .join("");
+
+  if (pageInfo)
+    pageInfo.innerText = `Page ${lbCurrentPage + 1} / ${totalPages}`;
+  if (prevBtn) prevBtn.disabled = lbCurrentPage === 0;
+  if (nextBtn) nextBtn.disabled = lbCurrentPage >= totalPages - 1;
+
+  // Sembunyikan pagination jika data <= 1 halaman
+  const paginationEl = document.getElementById("lb-pagination");
+  if (paginationEl)
+    paginationEl.style.display = totalPages <= 1 ? "none" : "flex";
+}
+
+leaderboardBtn?.addEventListener("click", async () => {
+  if (leaderboardModal) leaderboardModal.style.display = "flex";
+  lbCurrentPage = 0;
+  const listEl = document.getElementById("leaderboard-list");
+  if (listEl)
+    listEl.innerHTML =
+      "<p style='text-align:center; color:#888'>Loading...</p>";
+
+  let data, error;
+  ({ data, error } = await supabase
+    .from("profiles")
+    .select("username, points")
+    .order("points", { ascending: false })
+    .limit(100));
 
   if (error) {
     console.warn("[auth] fetchProfile error:", error.message);
@@ -282,50 +341,49 @@ joinBtn?.addEventListener("click", () => {
   if (joinScene) joinScene.style.display = "flex";
 });
 
-logoutBtn?.addEventListener("click", async () => {
-  const { error } = await supabase.auth.signOut();
-  if (error) console.warn("[auth] signOut error:", error.message);
-});
-
+// Tombol Back dari create scene ke menu
+const createBackBtn = document.getElementById("create-back-btn");
 createBackBtn?.addEventListener("click", () => {
+  sessionStorage.removeItem("inBattle");
+  sessionStorage.removeItem("battleMode");
+  sessionStorage.removeItem("battleRole");
   if (createScene) createScene.style.display = "none";
   if (menuScene) menuScene.style.display = "flex";
 });
 
+// Tombol Back dari join scene ke menu
+const joinBackBtn = document.getElementById("join-back-btn");
 joinBackBtn?.addEventListener("click", () => {
+  sessionStorage.removeItem("inBattle");
+  sessionStorage.removeItem("battleMode");
+  sessionStorage.removeItem("battleRole");
   if (joinScene) joinScene.style.display = "none";
   if (menuScene) menuScene.style.display = "flex";
 });
 
-// ── Lobby Start ───────────────────────────────────────────────────────────────
-
-createStartBtn?.addEventListener("click", () => {
-  if (players.length < 2) {
-    players.push({ name: "CPU", id: "cpu" });
-  }
-
-  const p1 = players[0]?.name || "Player 1";
-  const p2 = players[1]?.name || "Player 2";
-  const disp1 = document.getElementById("display-p1-name");
-  const disp2 = document.getElementById("display-p2-name");
-  if (disp1) disp1.innerText = p1;
-  if (disp2) disp2.innerText = p2;
-
-  if (createScene) createScene.style.display = "none";
-  if (battleScene) battleScene.style.display = "flex";
-
-  if (window.startGame) window.startGame();
+// Tombol tutup info/panduan
+const closeInfoBtn = document.getElementById("close-info-btn");
+const infoModal = document.getElementById("control-info-modal");
+closeInfoBtn?.addEventListener("click", () => {
+  if (infoModal) infoModal.style.display = "none";
 });
 
-joinRoomBtn?.addEventListener("click", () => {
-  const code = joinCodeInput?.value?.trim();
-  if (!code) return alert("Enter invite code");
-  alert("Joined room: " + code + " (UI mock)");
-  const btn = document.getElementById("join-ready-btn");
-  if (btn) btn.disabled = false;
+// Tombol buka info/panduan dari berbagai scene
+const infoMenuBtn = document.getElementById("info-menu-btn");
+const infoP1Btn = document.getElementById("info-p1-btn");
+const infoP2Btn = document.getElementById("info-p2-btn");
+
+infoMenuBtn?.addEventListener("click", () => {
+  if (infoModal) infoModal.style.display = "flex";
 });
 
-// ── Invite code system ────────────────────────────────────────────────────────
+infoP1Btn?.addEventListener("click", () => {
+  if (infoModal) infoModal.style.display = "flex";
+});
+
+infoP2Btn?.addEventListener("click", () => {
+  if (infoModal) infoModal.style.display = "flex";
+});
 
 function genInviteCode() {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -353,31 +411,46 @@ copyInviteBtn?.addEventListener("click", () => {
   });
 });
 
-simulateJoinBtn?.addEventListener("click", () => {
-  const other = {
-    name: "Player_" + Math.floor(Math.random() * 1000),
-    id: "sim_" + Date.now(),
-  };
-  players.push(other);
-  renderPlayersCreate();
-  updateStartButton();
+joinBtn?.addEventListener("click", () => {
+  menuScene.style.display = "none";
+  joinScene.style.display = "flex";
+  window.localRole = "p2";
+  window.isBotMode = false;
 });
 
-// ── Supabase auth state listener ──────────────────────────────────────────────
+joinRoomBtn?.addEventListener("click", (e) => {
+  e.preventDefault(); // Blokir pemuatan ulang halaman web bawaan browser
+  const namaAman =
+    currentProfile?.username ||
+    currentUser?.user_metadata?.full_name?.split(" ")[0] ||
+    "Kura";
+  const code = joinCodeInput.value.trim().toUpperCase();
+  if (!code) return alert("Masukkan kode lobby!");
 
-supabase.auth.onAuthStateChange(async (event, session) => {
-  if (event === "SIGNED_IN" && session?.user && !currentUser) {
-    await handleSession(session.user);
-  }
-  if (event === "SIGNED_OUT") {
-    currentUser = null;
-    currentProfile = null;
-    players = [];
-    inviteCode = null;
-    if (menuScene) menuScene.style.display = "none";
-    if (authScene) authScene.style.display = "flex";
-    setAuthMode("login");
-  }
+  setupRoomChannel(
+    code,
+    namaAman,
+    (players) => {
+      if (joinPlayers) {
+        joinPlayers.innerHTML = players
+          .map(
+            (p) =>
+              `<li>⚔️ ${p.username} (${p.role === "p1" ? "Host" : "Player 2"})</li>`,
+          )
+          .join("");
+      }
+      // Set username P1 dan P2 dari daftar players
+      const p1 = players.find((p) => p.role === "p1");
+      const p2 = players.find((p) => p.role === "p2");
+      if (p1) window.player1Username = p1.username;
+      if (p2) window.player2Username = p2.username;
+    },
+    () => {
+      if (joinScene) joinScene.style.display = "none";
+      if (battleScene) battleScene.style.display = "flex";
+      if (window.startGame) window.startGame();
+    },
+  );
 });
 
 // ── Logout ────────────────────────────────────────────────────────────────────

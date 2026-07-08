@@ -1,85 +1,144 @@
-import "../style/style.css";
+﻿import "../style/style.css";
+import "./auth.js";
 import { CONFIG } from "../data/config";
 import { Fighter } from "../class/Fighter";
 import { Sprite } from "../class/Sprite";
-import "./auth.js";
+import {
+  setupNetworkReceiver,
+  emitNetworkState,
+  emitHit,
+  emitHealthSync,
+  sendRoundSignal,
+  listenRoundStarted,
+} from "./network.js";
+import * as Network from "./network.js";
+import { supabase } from "../lib/supabase.js";
+
+// User ID cache — diisi saat game start, dipakai untuk awardPoints
+let cachedUserId = null;
 
 const canvas = document.getElementById("arena");
-let ctx = null;
-if (!canvas) {
-  console.error("Canvas #arena not found in DOM");
-} else {
-  ctx = canvas.getContext("2d");
-}
+let ctx = canvas ? canvas.getContext("2d") : null;
 
-// --- INISIALISASI DOM (SCENE MANAGER) ---
-const startScene = document.getElementById("start-scene");
 const battleScene = document.getElementById("battle-scene");
-// const startBtn = document.getElementById("start-btn");
-const restartBtn = document.getElementById("restart-btn");
-const startOnlineBtn = document.getElementById("start-online-btn");
-
-// AUTH / LOBBY
-const authScene = document.getElementById("auth-scene");
-const lobbyScene = document.getElementById("lobby-scene");
-const lobbyUsername = document.getElementById("lobby-username");
-const lobbyPlayers = document.getElementById("lobby-players");
-const lobbyStartBtn = document.getElementById("lobby-start-btn");
-
-// --- INISIALISASI HEALTH BAR ---
 const player1Health = document.getElementById("player1-health");
 const player2Health = document.getElementById("player2-health");
 
-// --- INISIALISASI AUDIO ---
 const menuMusic = new Audio("/asset/audio/bgm/bgm_menu.wav");
 const backgroundMusic = new Audio("/asset/audio/bgm/bgm_fight.wav");
 const jumpSound = new Audio("/asset/audio/sfx/movement/sfx_jump.wav");
 const landSound = new Audio("/asset/audio/sfx/movement/sfx_landing.wav");
 const walkSound = new Audio("/asset/audio/sfx/movement/sfx_walking_grass.wav");
-
 const skill1Sound1 = new Audio(
   "/asset/audio/sfx/combat/weapon/sfx_player1_skill1.wav",
-);
-const skill2Sound1 = new Audio(
-  "/asset/audio/sfx/combat/weapon/sfx_player1_skill2.wav",
 );
 const skill1Sound2 = new Audio(
   "/asset/audio/sfx/combat/weapon/sfx_player2_skill1.wav",
 );
-const skill2Sound2 = new Audio(
-  "/asset/audio/sfx/combat/weapon/sfx_player2_skill2.wav",
-);
 
-// Pengaturan Audio
 menuMusic.volume = 0.2;
 menuMusic.loop = true;
 backgroundMusic.volume = 0.2;
 backgroundMusic.loop = true;
-walkSound.loop = true; // Supaya jalan terus saat tombol ditahan
+walkSound.loop = true;
 
 let player1InAir = false;
 let player2InAir = false;
-
-canvas.width = CONFIG.canvasWidth;
-canvas.height = CONFIG.canvasHeight;
-
 let lastKeyP1 = "";
 let lastKeyP2 = "";
+let gameActive = false; // Pengaman status permainan aktif
+let animationStarted = false; // Pengaman agar animate() hanya dipanggil sekali
 
-// --- OBJECTS ---
+// Round & Timer system
+let currentRound = 1;
+let p1RoundWins = 0;
+let p2RoundWins = 0;
+let roundTimer = 60;
+let timerInterval = null;
+let roundEnding = false; // Guard agar winnerCheck tidak dipanggil duplikat
+
+// Player names
+let player1Name = "Player 1";
+let player2Name = "Player 2";
+
+window.addEventListener("load", function () {
+  setTimeout(function () {
+    window.scrollTo(0, 1);
+  }, 0);
+});
+if (canvas) {
+  canvas.width = CONFIG.canvasWidth;
+  canvas.height = CONFIG.canvasHeight;
+}
+
 const background = new Sprite({
   position: { x: 0, y: 0 },
   imageSrc: "/asset/backgrounds/game_background_2/game_background_2.png",
 });
 
+// === EFEK PARTIKEL ARENA (ember, debu, api kecil) ===
+const particles = [];
+const PARTICLE_COUNT = 22;
+
+function createParticle(randomY = false) {
+  const types = [
+    { color: "255,180,50", size: [1.5, 3] }, // api/ember
+    { color: "200,100,30", size: [1, 2.5] }, // bara
+    { color: "220,220,200", size: [1, 2] }, // debu
+  ];
+  const t = types[Math.floor(Math.random() * types.length)];
+  return {
+    x: Math.random() * CONFIG.canvasWidth,
+    y: randomY ? Math.random() * CONFIG.canvasHeight : CONFIG.canvasHeight + 10,
+    size: t.size[0] + Math.random() * (t.size[1] - t.size[0]),
+    speedY: -(Math.random() * 0.7 + 0.25),
+    speedX: (Math.random() - 0.5) * 0.5,
+    opacity: Math.random() * 0.55 + 0.25,
+    maxOpacity: Math.random() * 0.55 + 0.25,
+    color: t.color,
+    flicker: Math.random() * 0.01 + 0.003,
+  };
+}
+
+function initParticles() {
+  particles.length = 0;
+  for (let i = 0; i < PARTICLE_COUNT; i++) {
+    particles.push(createParticle(true));
+  }
+}
+
+function drawParticles(ctx) {
+  for (const p of particles) {
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, p.opacity);
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(${p.color},1)`;
+    ctx.shadowColor = `rgba(${p.color},0.9)`;
+    ctx.shadowBlur = p.size * 4;
+    ctx.fill();
+    ctx.restore();
+
+    p.x += p.speedX;
+    p.y += p.speedY;
+    p.opacity -= p.flicker;
+
+    if (p.opacity <= 0 || p.y < -10) {
+      Object.assign(p, createParticle(false));
+    }
+  }
+}
+
+initParticles();
+
 const player1 = new Fighter({
-  position: { x: 80, y: 0 },
+  position: { x: 100, y: 0 },
   velocity: { x: 0, y: 0 },
-  offset: { x: 100, y: 0 },
+  offset: { x: 100, y: 40 },
   color: "blue",
   imageSrc: "/asset/characters/Samurai/Idle.png",
   framesMax: 6,
-  scale: 2.9,
+  scale: 2.5,
   sprites: {
     idle: { imageSrc: "/asset/characters/Samurai/Idle.png", framesMax: 6 },
     run: { imageSrc: "/asset/characters/Samurai/Run.png", framesMax: 8 },
@@ -88,21 +147,18 @@ const player1 = new Fighter({
       imageSrc: "/asset/characters/Samurai/Attack_1.png",
       framesMax: 6,
     },
-    death: {
-      imageSrc: "/asset/characters/Samurai/Dead.png",
-      framesMax: 3,
-    },
+    death: { imageSrc: "/asset/characters/Samurai/Dead.png", framesMax: 3 },
   },
 });
 
 const player2 = new Fighter({
-  position: { x: 1080, y: 0 },
+  position: { x: 800, y: 0 },
   velocity: { x: 0, y: 0 },
-  offset: { x: 0, y: 0 },
-  color: "blue",
+  offset: { x: 100, y: 40 },
+  color: "red",
   imageSrc: "/asset/characters/Shinobi/Idle.png",
   framesMax: 6,
-  scale: 2.9,
+  scale: 2.5,
   sprites: {
     idle: { imageSrc: "/asset/characters/Shinobi/Idle.png", framesMax: 6 },
     run: { imageSrc: "/asset/characters/Shinobi/Run.png", framesMax: 8 },
@@ -111,84 +167,36 @@ const player2 = new Fighter({
       imageSrc: "/asset/characters/Shinobi/Attack_1.png",
       framesMax: 5,
     },
-    death: {
-      imageSrc: "/asset/characters/Shinobi/Dead.png",
-      framesMax: 4,
-    },
+    death: { imageSrc: "/asset/characters/Shinobi/Dead.png", framesMax: 4 },
   },
 });
 
-// Atur arah awal supaya kedua pemain saling berhadapan saat spawn
-if (player1.position.x < player2.position.x) {
-  player1.facing = "right";
-  player2.facing = "left";
-} else {
-  player1.facing = "left";
-  player2.facing = "right";
-}
+// MEMASTIKAN VALUE DARAH MENYALA AWAL
+player1.health = 100;
+player2.health = 100;
+player1.facing = "right";
+player2.facing = "left";
 
-const keys = {
-  a: { pressed: false },
-  d: { pressed: false },
-  l: { pressed: false },
-  j: { pressed: false },
-};
+const keys = { a: { pressed: false }, d: { pressed: false } };
 
-// --- LOGIKA ANIMASI ---
 function animate() {
-  window.requestAnimationFrame(animate);
+  if (!ctx || !gameActive) {
+    window.requestAnimationFrame(animate);
+    return;
+  }
+
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  background.update(ctx);
-  player1.update(ctx, canvas.height);
-  player2.update(ctx, canvas.height);
+  // === INPUT & VELOCITY — harus diproses SEBELUM update() ===
 
-  // logika untuk mengecek pemenang
-  if (player1.health <= 0 || player2.health <= 0) {
-    winnerCheck({ player1: player1, player2: player2 });
-  }
-
-  // logic Untuk mengecek benturan serangan
-  // PLAYER 1 MENYERANG PLAYER 2
-  // DI DALAM FUNGSI ANIMATE()
-
-  // PLAYER 1 MENYERANG PLAYER 2
-  if (
-    Serangan({ attacker: player1, victim: player2 }) &&
-    player1.isAttacking &&
-    player1.frameCurrent === 3 // Menyerang hanya aktif di frame ke-4 (index 3)
-  ) {
-    player2.takeHit();
-    player1.isAttacking = false; // langsung matikan agar tidak hit berkali-kali di frame yang sama
-    player2Health.style.width = player2.health + "%";
-  }
-
-  // PLAYER 2 MENYERANG PLAYER 1
-  if (
-    Serangan({ attacker: player2, victim: player1 }) &&
-    player2.isAttacking &&
-    player2.frameCurrent === 2 // Menyerang hanya aktif di frame ke-3 (index 2) sesuai isi sprite Shinobi
-  ) {
-    player1.takeHit();
-    player2.isAttacking = false; // langsung matikan
-    player1Health.style.width = player1.health + "%";
-  }
-  // LOGIKA GERAK PLAYER 1
-  if (!player1.dead) {
-    if (player1.position.x < player2.position.x) {
-      player1.facing = "right";
-      player2.facing = "left";
-    } else {
-      player1.facing = "left";
-      player2.facing = "right";
-    }
+  if (!player1.dead && window.localRole === "p1") {
     player1.velocity.x = 0;
     if (keys.d.pressed && lastKeyP1 === "d") {
-      player1.velocity.x = 3;
+      player1.velocity.x = 4;
       player1.facing = "right";
       player1.switchSprite("run");
     } else if (keys.a.pressed && lastKeyP1 === "a") {
-      player1.velocity.x = -3;
+      player1.velocity.x = -4;
       player1.facing = "left";
       player1.switchSprite("run");
     } else {
@@ -196,35 +204,123 @@ function animate() {
     }
   }
 
-  // LOGIKA GERAK PLAYER 2
   if (!player2.dead) {
-    player2.velocity.x = 0;
-    if (keys.l.pressed && lastKeyP2 === "l") {
-      player2.velocity.x = 3;
-      player2.facing = "right";
-      player2.switchSprite("run");
-    } else if (keys.j.pressed && lastKeyP2 === "j") {
-      player2.velocity.x = -3;
-      player2.facing = "left";
-      player2.switchSprite("run");
-    } else {
-      player2.switchSprite("idle");
+    if (window.isBotMode) {
+      player2.velocity.x = 0;
+      const jarakX = player1.position.x - player2.position.x;
+      if (Math.abs(jarakX) > 80) {
+        if (jarakX > 0) {
+          player2.velocity.x = 2.5;
+          player2.facing = "right";
+          player2.switchSprite("run");
+        } else {
+          player2.velocity.x = -2.5;
+          player2.facing = "left";
+          player2.switchSprite("run");
+        }
+      } else {
+        player2.switchSprite("idle");
+        if (!player2.isAttacking && Math.random() < 0.05) {
+          player2.attack();
+          if (skill1Sound2) {
+            skill1Sound2.currentTime = 0;
+            skill1Sound2.play();
+          }
+        }
+      }
+    } else if (window.localRole === "p2") {
+      player2.velocity.x = 0;
+      if (keys.d.pressed && lastKeyP2 === "d") {
+        player2.velocity.x = 4;
+        player2.facing = "right";
+        player2.switchSprite("run");
+      } else if (keys.a.pressed && lastKeyP2 === "a") {
+        player2.velocity.x = -4;
+        player2.facing = "left";
+        player2.switchSprite("run");
+      } else {
+        player2.switchSprite("idle");
+      }
     }
   }
 
-  // Logika Animasi Lompat
+  // Jump sprite override — harus setelah set velocity.x tapi sebelum update()
   if (player1.velocity.y < 0) player1.switchSprite("jump");
   if (player2.velocity.y < 0) player2.switchSprite("jump");
 
-  // Logika Suara Landing Player 1
+  // === NETWORK INTERPOLASI untuk lawan di multiplayer ===
+  if (!window.isBotMode && window.roomCode) {
+    if (window.localRole === "p2") {
+      const dx1 = Network.p1NetworkTarget.x - player1.position.x;
+      const dy1 = Network.p1NetworkTarget.y - player1.position.y;
+      const dist1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
+      // Snap langsung kalau jarak terlalu jauh, lerp kalau dekat
+      const factor1 = dist1 > 80 ? 1.0 : dist1 > 30 ? 0.7 : 0.5;
+      player1.position.x += dx1 * factor1;
+      player1.position.y += dy1 * factor1;
+    }
+    if (window.localRole === "p1") {
+      const dx2 = Network.p2NetworkTarget.x - player2.position.x;
+      const dy2 = Network.p2NetworkTarget.y - player2.position.y;
+      const dist2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+      const factor2 = dist2 > 80 ? 1.0 : dist2 > 30 ? 0.7 : 0.5;
+      player2.position.x += dx2 * factor2;
+      player2.position.y += dy2 * factor2;
+    }
+  }
+
+  // === RENDER ===
+  background.update(ctx);
+  drawParticles(ctx);
+  player1.update(ctx, canvas.height);
+  player2.update(ctx, canvas.height);
+
+  // === HIT DETECTION ===
+  // Hanya attacker yang menghitung hit-nya sendiri, lalu broadcast ke lawan
+  if (player1.isAttacking && player1.frameCurrent === 3) {
+    if (Serangan({ attacker: player1, victim: player2 })) {
+      if (window.isBotMode || window.localRole === "p1") {
+        // Di mode bot atau multiplayer P1 — P1 hitung hit ke P2
+        player2.takeHit();
+        if (player2Health) player2Health.style.width = player2.health + "%";
+        if (!window.isBotMode) {
+          // Kirim event hit ke P2 dan sync health ke P2
+          emitHit("p2");
+          emitHealthSync("p2", player2.health, player2.dead);
+        }
+      }
+    }
+    player1.isAttacking = false;
+  }
+
+  if (player2.isAttacking && player2.frameCurrent === 2) {
+    if (Serangan({ attacker: player2, victim: player1 })) {
+      if (window.isBotMode || window.localRole === "p2") {
+        // Di mode bot atau multiplayer P2 — P2 hitung hit ke P1
+        player1.takeHit();
+        if (player1Health) player1Health.style.width = player1.health + "%";
+        if (!window.isBotMode) {
+          // Kirim event hit ke P1 dan sync health ke P1
+          emitHit("p1");
+          emitHealthSync("p1", player1.health, player1.dead);
+        }
+      }
+    }
+    player2.isAttacking = false;
+  }
+
+  // === CEK WINNER ===
+  if (gameActive && (player1.health <= 0 || player2.health <= 0)) {
+    winnerCheck({ player1, player2 });
+  }
+
+  // === SUARA JALAN ===
   if (player1.velocity.y !== 0) player1InAir = true;
   if (player1InAir && player1.velocity.y === 0) {
     landSound.currentTime = 0;
     landSound.play();
     player1InAir = false;
   }
-
-  // Logika Suara Landing Player 2
   if (player2.velocity.y !== 0) player2InAir = true;
   if (player2InAir && player2.velocity.y === 0) {
     landSound.currentTime = 0;
@@ -232,72 +328,174 @@ function animate() {
     player2InAir = false;
   }
 
-  // Logika Walk Sound (Hanya bunyi jika di tanah dan menekan tombol jalan)
   if (
-    (keys.a.pressed || keys.d.pressed || keys.j.pressed || keys.l.pressed) &&
+    (keys.a.pressed || keys.d.pressed) &&
     (player1.velocity.y === 0 || player2.velocity.y === 0)
   ) {
     if (walkSound.paused) walkSound.play();
   } else {
     walkSound.pause();
   }
+
+  emitNetworkState(player1, player2);
+  window.requestAnimationFrame(animate);
 }
 
-// --- EVENT LISTENERS ---
-// if (!startBtn) console.error("start-btn element not found");
 function startGame() {
-  console.log("startGame() invoked");
-  // Update Nama (if start scene inputs exist)
-  const p1NameInput = document.getElementById("p1-name-input");
-  const p2NameInput = document.getElementById("p2-name-input");
-  const p1Name =
-    (p1NameInput && p1NameInput.value) ||
-    document.getElementById("display-p1-name").innerText ||
-    "Samurai";
-  const p2Name =
-    (p2NameInput && p2NameInput.value) ||
-    document.getElementById("display-p2-name").innerText ||
-    "Shinobi";
-  const disp1El = document.getElementById("display-p1-name");
-  const disp2El = document.getElementById("display-p2-name");
-  if (disp1El) disp1El.innerText = p1Name;
-  if (disp2El) disp2El.innerText = p2Name;
+  // Cache user ID sekali saat game mulai
+  supabase.auth.getSession().then(({ data }) => {
+    cachedUserId = data?.session?.user?.id || null;
+  });
 
-  // Transisi Scene
-  if (startScene) startScene.style.display = "none";
-  if (battleScene) battleScene.style.display = "flex";
+  // Simpan status battle ke sessionStorage agar tahan refresh
+  sessionStorage.setItem("inBattle", "true");
+  sessionStorage.setItem(
+    "battleMode",
+    window.isBotMode ? "bot" : "multiplayer",
+  );
+  sessionStorage.setItem("battleRole", window.localRole || "p1");
 
-  // Jalankan BGM & Game
-  try {
-    backgroundMusic.play();
-  } catch (err) {
-    console.warn("backgroundMusic.play() failed:", err);
+  // Hide game over screen dari ronde sebelumnya
+  const gameOverScreen = document.querySelector("#game-over-screen");
+  if (gameOverScreen) gameOverScreen.style.display = "none";
+
+  // Reset guard round ending
+  roundEnding = false;
+
+  player1.health = 100;
+  player2.health = 100;
+  if (player1Health) player1Health.style.width = "100%";
+  if (player2Health) player2Health.style.width = "100%";
+
+  // Reset posisi player ke posisi awal
+  player1.position.x = 100;
+  player1.position.y = 0;
+  player2.position.x = 800;
+  player2.position.y = 0;
+
+  // Reset state mati dan sprite ke idle agar ronde baru bersih
+  player1.dead = false;
+  player1.frameCurrent = 0;
+  player1.image = player1.sprites.idle.image;
+  player1.framesMax = player1.sprites.idle.framesMax;
+
+  player2.dead = false;
+  player2.frameCurrent = 0;
+  player2.image = player2.sprites.idle.image;
+  player2.framesMax = player2.sprites.idle.framesMax;
+
+  // Handle opponent disconnect — staying player wins automatically
+  window.onOpponentDisconnected = (payload) => {
+    if (!gameActive) return;
+    const disconnectedRole = payload.role;
+    const winnerRole = disconnectedRole === "p1" ? "p2" : "p1";
+    const winnerName = winnerRole === "p1" ? player1Name : player2Name;
+    const loserName = disconnectedRole === "p1" ? player1Name : player2Name;
+
+    if (winnerRole === "p1") p1RoundWins = 2;
+    else p2RoundWins = 2;
+
+    if (!roundEnding) {
+      roundEnding = true;
+      gameActive = false;
+      stopTimer();
+      walkSound.pause();
+      backgroundMusic.pause();
+      backgroundMusic.currentTime = 0;
+      updateRoundWinsDisplay();
+
+      const screen = document.querySelector("#game-over-screen");
+      const text = document.querySelector("#winner-text");
+      const roundLabelEl = document.querySelector("#round-over-label");
+      const nextRoundText = document.querySelector("#next-round-text");
+      const restartBtn = document.querySelector("#restart-btn");
+      if (!screen || !text) return;
+
+      if (roundLabelEl) roundLabelEl.innerText = "MATCH OVER";
+      text.innerHTML = `${winnerName} WINS THE MATCH!`;
+      if (nextRoundText)
+        nextRoundText.innerText = `${loserName} disconnected.  🏆 +10 pts for ${winnerName}  |  -5 pts for ${loserName}`;
+      if (restartBtn) restartBtn.innerText = "BACK TO MENU";
+
+      awardPoints(winnerRole, disconnectedRole);
+      sessionStorage.removeItem("inBattle");
+      sessionStorage.removeItem("battleMode");
+      sessionStorage.removeItem("battleRole");
+      screen.style.display = "block";
+    }
+  };
+
+  if (!window.isBotMode)
+    setupNetworkReceiver(player1, player2, player1Health, player2Health, () =>
+      winnerCheck({ player1, player2 }),
+    );
+
+  // Listen for next round signal from host (P2 side)
+  if (!window.isBotMode) {
+    listenRoundStarted((round) => {
+      if (round > currentRound || (round === 1 && currentRound === 1)) return; // host already called startGame
+      currentRound = round;
+      startGame();
+    });
   }
-  try {
-    menuMusic.pause();
-  } catch (err) {
-    /* ignore */
-  }
 
-  try {
-    if (!ctx && canvas) ctx = canvas.getContext("2d");
+  // Update nama player di header
+  const p1NameEl = document.getElementById("display-p1-name");
+  const p2NameEl = document.getElementById("display-p2-name");
+  if (window.player1Username) player1Name = window.player1Username;
+  if (window.player2Username) player2Name = window.player2Username;
+  if (p1NameEl) p1NameEl.innerText = player1Name;
+  if (p2NameEl) p2NameEl.innerText = player2Name;
+
+  // Update round label
+  const roundLabelEl = document.getElementById("round-label");
+  if (roundLabelEl) roundLabelEl.innerText = `ROUND ${currentRound}`;
+  updateRoundWinsDisplay();
+  startTimer();
+
+  gameActive = true; // Nyalakan game loop
+  backgroundMusic.play().catch(() => {});
+
+  // Pastikan animate() hanya didaftarkan satu kali
+  if (!animationStarted) {
+    animationStarted = true;
     animate();
-    console.log("Game animation started");
-  } catch (err) {
-    console.error("Failed to start animate():", err);
   }
 }
-
-// expose to other modules/UI so lobby can trigger game start
 window.startGame = startGame;
 
-startBtn?.addEventListener("click", startGame);
+// Restart / Next Round / Back to Menu button handler
+const restartBtn = document.getElementById("restart-btn");
+restartBtn?.addEventListener("click", () => {
+  if (p1RoundWins >= 2 || p2RoundWins >= 2) {
+    // Match selesai — reset semua dan kembali ke menu
+    currentRound = 1;
+    p1RoundWins = 0;
+    p2RoundWins = 0;
+    sessionStorage.removeItem("inBattle");
+    sessionStorage.removeItem("battleMode");
+    sessionStorage.removeItem("battleRole");
+    const battleSceneEl = document.getElementById("battle-scene");
+    const menuSceneEl = document.getElementById("menu-scene");
+    if (battleSceneEl) battleSceneEl.style.display = "none";
+    if (menuSceneEl) menuSceneEl.style.display = "flex";
+  } else {
+    // Lanjut ke ronde berikutnya
+    currentRound++;
+    // Di multiplayer, hanya host (P1) yang broadcast signal ronde baru
+    if (!window.isBotMode && window.roomCode && window.localRole === "p1") {
+      sendRoundSignal(currentRound);
+    }
+    startGame();
+  }
+});
 
-// START ONLINE NAVIGATION (show auth -> lobby)
-startOnlineBtn?.addEventListener("click", () => {
-  // show auth scene
-  startScene.style.display = "none";
-  authScene.style.display = "block";
+// Cegah refresh keluar dari game — tampilkan konfirmasi browser native
+window.addEventListener("beforeunload", (e) => {
+  if (gameActive) {
+    e.preventDefault();
+    e.returnValue = ""; // Trigger dialog konfirmasi browser
+  }
 });
 
 window.onload = () => {
@@ -309,88 +507,239 @@ window.onload = () => {
     { once: true },
   );
 };
-restartBtn.addEventListener("click", () => {
-  keys.a.pressed = false;
-  keys.d.pressed = false;
-  keys.j.pressed = false;
-  keys.l.pressed = false;
-  lastKeyP1 = "";
-  lastKeyP2 = "";
-  resetGame();
-});
 
 window.addEventListener("keydown", (event) => {
-  console.log("KEY:", event.key);
-
-  switch (event.key) {
-    // Player 1
-    case "d":
-      keys.d.pressed = true;
-      lastKeyP1 = "d";
-      break;
-    case "a":
-      keys.a.pressed = true;
-      lastKeyP1 = "a";
-      break;
-    case "w":
-      if (player1.velocity.y === 0) {
-        player1.velocity.y = -10;
-        jumpSound.currentTime = 0;
-        jumpSound.play();
-      }
-      break;
-    case "c":
+  if (!window.localRole || !gameActive) return;
+  if (event.key === "d") {
+    keys.d.pressed = true;
+    if (window.localRole === "p1") lastKeyP1 = "d";
+    if (window.localRole === "p2") lastKeyP2 = "d";
+  }
+  if (event.key === "a") {
+    keys.a.pressed = true;
+    if (window.localRole === "p1") lastKeyP1 = "a";
+    if (window.localRole === "p2") lastKeyP2 = "a";
+  }
+  if (window.localRole === "p1") {
+    if (event.key === "w" && player1.velocity.y === 0) {
+      player1.velocity.y = -12;
+      jumpSound.currentTime = 0;
+      jumpSound.play();
+    }
+    if (event.key === "c" && !player1.isAttacking) {
       player1.attack();
       skill1Sound1.currentTime = 0;
       skill1Sound1.play();
-      break;
-
-    // Player 2
-    case "l":
-      keys.l.pressed = true;
-      lastKeyP2 = "l";
-      break;
-    case "j":
-      keys.j.pressed = true;
-      lastKeyP2 = "j";
-      break;
-    case "i":
-      if (player2.velocity.y === 0) {
-        player2.velocity.y = -10;
-        jumpSound.currentTime = 0;
-        jumpSound.play();
-      }
-      break;
-    case "n":
+    }
+  }
+  if (window.localRole === "p2" && !window.isBotMode) {
+    if (event.key === "w" && player2.velocity.y === 0) {
+      player2.velocity.y = -12;
+      jumpSound.currentTime = 0;
+      jumpSound.play();
+    }
+    if (event.key === "c" && !player2.isAttacking) {
       player2.attack();
       skill1Sound2.currentTime = 0;
       skill1Sound2.play();
-      break;
+    }
   }
 });
 
 window.addEventListener("keyup", (event) => {
-  switch (event.key) {
-    case "d":
-      keys.d.pressed = false;
-      break;
-    case "a":
-      keys.a.pressed = false;
-      break;
-    case "l":
-      keys.l.pressed = false;
-      break;
-    case "j":
-      keys.j.pressed = false;
-      break;
-  }
+  if (event.key === "d") keys.d.pressed = false;
+  if (event.key === "a") keys.a.pressed = false;
 });
 
-// fungsi untuk mengecek benturan serangan
-function Serangan({ attacker, victim }) {
-  // const victimWidth = (victim.image.width / victim.framesMax) * victim.scale;
-  // const victimHeight = victim.image.height * victim.scale;
+// ============================================
+// MOBILE CONTROLS
+// ============================================
 
+const isMobile = () =>
+  /Android|iPhone|iPad|iPod|Touch/i.test(navigator.userAgent) ||
+  window.matchMedia("(pointer: coarse)").matches;
+
+// Show/hide mobile controls based on game state and device
+function updateMobileControls() {
+  const mobileControls = document.getElementById("mobile-controls");
+  if (!mobileControls) return;
+  mobileControls.style.display = isMobile() && gameActive ? "block" : "none";
+}
+
+// Auto lock orientation to landscape on mobile
+function lockLandscape() {
+  if (!isMobile()) return;
+  if (screen.orientation && screen.orientation.lock) {
+    screen.orientation.lock("landscape").catch(() => {});
+  }
+  // Request fullscreen to hide browser bar
+  const el = document.documentElement;
+  if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
+  else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+}
+
+function unlockOrientation() {
+  if (screen.orientation && screen.orientation.unlock) {
+    screen.orientation.unlock();
+  }
+}
+
+// Override startGame to show mobile controls and lock orientation
+// Langsung patch startGame function tanpa override window.startGame
+const _origStartGame = startGame;
+function startGameWithMobile() {
+  _origStartGame();
+  if (isMobile()) {
+    lockLandscape();
+    setTimeout(updateMobileControls, 100);
+  }
+}
+window.startGame = startGameWithMobile;
+
+// Also show controls when game becomes active (covers round 2+)
+setInterval(() => {
+  const mobileControls = document.getElementById("mobile-controls");
+  if (!mobileControls) return;
+  if (isMobile() && gameActive && mobileControls.style.display === "none") {
+    mobileControls.style.display = "block";
+  } else if (!gameActive && mobileControls.style.display !== "none") {
+    mobileControls.style.display = "none";
+  }
+}, 300);
+
+// ---- VIRTUAL JOYSTICK (swipe up = jump, left/right = move) ----
+const joystickBase = document.getElementById("joystick-base");
+const joystickKnob = document.getElementById("joystick-knob");
+
+let joystickActive = false;
+let joystickStartX = 0;
+let joystickStartY = 0;
+let joystickTouchId = null;
+const JOYSTICK_RADIUS = 40;
+const JOYSTICK_DEAD_ZONE = 10;
+const JUMP_THRESHOLD = 30;
+
+function getLocalPlayer() {
+  return window.localRole === "p2" && !window.isBotMode ? player2 : player1;
+}
+
+function setJoystickKnobPos(dx, dy) {
+  const cx = Math.max(-JOYSTICK_RADIUS, Math.min(JOYSTICK_RADIUS, dx));
+  const cy = Math.max(-JOYSTICK_RADIUS, Math.min(JOYSTICK_RADIUS, dy));
+  joystickKnob.style.transform =
+    "translate(calc(-50% + " + cx + "px), calc(-50% + " + cy + "px))";
+}
+
+function resetJoystick() {
+  joystickKnob.style.transform = "translate(-50%, -50%)";
+  keys.a.pressed = false;
+  keys.d.pressed = false;
+  lastKeyP1 = "";
+  lastKeyP2 = "";
+  joystickActive = false;
+  joystickTouchId = null;
+}
+
+joystickBase?.addEventListener(
+  "touchstart",
+  (e) => {
+    e.preventDefault();
+    if (!gameActive) return;
+    const touch = e.changedTouches[0];
+    joystickActive = true;
+    joystickTouchId = touch.identifier;
+    joystickStartX = touch.clientX;
+    joystickStartY = touch.clientY;
+  },
+  { passive: false },
+);
+
+joystickBase?.addEventListener(
+  "touchmove",
+  (e) => {
+    e.preventDefault();
+    if (!joystickActive) return;
+    for (const touch of e.changedTouches) {
+      if (touch.identifier !== joystickTouchId) continue;
+      const dx = touch.clientX - joystickStartX;
+      const dy = touch.clientY - joystickStartY;
+      setJoystickKnobPos(dx, dy);
+      if (Math.abs(dx) > JOYSTICK_DEAD_ZONE) {
+        if (dx < 0) {
+          keys.a.pressed = true;
+          keys.d.pressed = false;
+          lastKeyP1 = "a";
+          lastKeyP2 = "a";
+        } else {
+          keys.d.pressed = true;
+          keys.a.pressed = false;
+          lastKeyP1 = "d";
+          lastKeyP2 = "d";
+        }
+      } else {
+        keys.a.pressed = false;
+        keys.d.pressed = false;
+        lastKeyP1 = "";
+        lastKeyP2 = "";
+      }
+      break;
+    }
+  },
+  { passive: false },
+);
+
+joystickBase?.addEventListener(
+  "touchend",
+  (e) => {
+    e.preventDefault();
+    for (const touch of e.changedTouches) {
+      if (touch.identifier !== joystickTouchId) continue;
+      const dy = touch.clientY - joystickStartY;
+      if (dy < -JUMP_THRESHOLD) {
+        const p = getLocalPlayer();
+        if (p && p.velocity.y === 0) {
+          p.velocity.y = -12;
+          jumpSound.currentTime = 0;
+          jumpSound.play().catch(() => {});
+        }
+      }
+      resetJoystick();
+      break;
+    }
+  },
+  { passive: false },
+);
+
+// ---- ATTACK BUTTON ----
+const btnAttack = document.getElementById("btn-attack");
+let attackCooldown = false; // Guard agar serangan tidak berulang
+btnAttack?.addEventListener(
+  "touchstart",
+  (e) => {
+    e.preventDefault();
+    if (!gameActive || attackCooldown) return;
+    const p = getLocalPlayer();
+    if (p && !p.isAttacking) {
+      attackCooldown = true;
+      p.attack();
+      const snd =
+        window.localRole === "p2" && !window.isBotMode
+          ? skill1Sound2
+          : skill1Sound1;
+      if (snd) {
+        snd.currentTime = 0;
+        snd.play().catch(() => {});
+      }
+      // Reset cooldown setelah animasi attack selesai (~400ms)
+      setTimeout(() => {
+        attackCooldown = false;
+      }, 400);
+    }
+  },
+  { passive: false },
+);
+
+function Serangan({ attacker, victim }) {
   return (
     attacker.attackBox.position.x < victim.position.x + victim.width &&
     attacker.attackBox.position.x + attacker.attackBox.width >
@@ -401,40 +750,199 @@ function Serangan({ attacker, victim }) {
   );
 }
 
-// fungsi untuk mengecek pemenang
-function resetGame() {
-  player1.position = { x: 80, y: 0 };
-  player2.position = { x: 1080, y: 0 };
-  player1.velocity = { x: 0, y: 0 };
-  player2.velocity = { x: 0, y: 0 };
-  player1.health = 100;
-  player2.health = 100;
-  player1.dead = false;
-  player2.dead = false;
-  player1.isAttacking = false;
-  player2.isAttacking = false;
-  player1.facing = "right";
-  player2.facing = "left";
-  player1.switchSprite("idle");
-  player2.switchSprite("idle");
-  player1Health.style.width = "100%";
-  player2Health.style.width = "100%";
-  document.querySelector("#game-over-screen").style.display = "none";
+function updateTimerDisplay() {
+  const timerEl = document.getElementById("timer-display");
+  if (!timerEl) return;
+  timerEl.innerText = roundTimer;
+  if (roundTimer <= 10) timerEl.classList.add("danger");
+  else timerEl.classList.remove("danger");
+}
+
+function updateRoundWinsDisplay() {
+  const p1El = document.getElementById("p1-round-wins");
+  const p2El = document.getElementById("p2-round-wins");
+  if (p1El)
+    p1El.innerText =
+      (p1RoundWins >= 1 ? "⬤ " : "○ ") + (p1RoundWins >= 2 ? "⬤" : "○");
+  if (p2El)
+    p2El.innerText =
+      (p2RoundWins >= 1 ? "⬤ " : "○ ") + (p2RoundWins >= 2 ? "⬤" : "○");
+}
+
+function startTimer() {
+  roundTimer = 60;
+  updateTimerDisplay();
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    if (!gameActive) return;
+    roundTimer--;
+    updateTimerDisplay();
+    if (roundTimer <= 0) {
+      clearInterval(timerInterval);
+      // Waktu habis — pemenang dari health tertinggi
+      if (player1.health > player2.health) p1RoundWins++;
+      else if (player2.health > player1.health) p2RoundWins++;
+      showRoundResult();
+    }
+  }, 1000);
+}
+
+function stopTimer() {
+  if (timerInterval) clearInterval(timerInterval);
+}
+
+async function awardPoints(winnerRole, loserRole) {
+  try {
+    // Helper: get user ID by username atau dari cache
+    async function getUserId(role) {
+      if (window.isBotMode) {
+        // Bot mode: P1 selalu user yang login, P2 adalah bot (null)
+        if (role === "p1") return cachedUserId || null;
+        return null; // Bot tidak punya akun
+      }
+      const username = role === "p1" ? player1Name : player2Name;
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("username", username)
+        .single();
+      if (error) console.error("[POINTS] getUserId error:", error.message);
+      return data?.id || null;
+    }
+
+    const winnerId = await getUserId(winnerRole);
+    console.log("[POINTS] Winner ID:", winnerId, "role:", winnerRole);
+    if (winnerId) {
+      const { error } = await supabase.rpc("increment_points", {
+        user_id: winnerId,
+        points_to_add: 10,
+      });
+      if (error)
+        console.error("[POINTS] Failed to add points:", error.message, error);
+      else console.log("[POINTS] +10 points awarded to", winnerId);
+    } else {
+      console.warn("[POINTS] Winner ID not found, points not awarded");
+    }
+
+    if (loserRole) {
+      const loserId = await getUserId(loserRole);
+      console.log("[POINTS] Loser ID:", loserId, "role:", loserRole);
+      if (loserId) {
+        const { error } = await supabase.rpc("increment_points", {
+          user_id: loserId,
+          points_to_add: -5,
+        });
+        if (error)
+          console.error(
+            "[POINTS] Failed to deduct points:",
+            error.message,
+            error,
+          );
+        else console.log("[POINTS] -5 points deducted from", loserId);
+      }
+    }
+  } catch (e) {
+    console.error("[POINTS] Unexpected error:", e);
+  }
+}
+
+function showRoundResult() {
+  gameActive = false;
+  stopTimer();
+  walkSound.pause();
+  backgroundMusic.pause();
+  backgroundMusic.currentTime = 0;
+
+  updateRoundWinsDisplay();
+
+  const screen = document.querySelector("#game-over-screen");
+  const text = document.querySelector("#winner-text");
+  const roundLabelEl = document.querySelector("#round-over-label");
+  const nextRoundText = document.querySelector("#next-round-text");
+  const restartBtn = document.querySelector("#restart-btn");
+  if (!screen || !text) return;
+
+  if (roundLabelEl) roundLabelEl.innerText = `ROUND ${currentRound}`;
+
+  // Tentukan pemenang ronde
+  const p1Won = player1.health > player2.health || player2.health <= 0;
+  const p2Won = player2.health > player1.health || player1.health <= 0;
+  const roundWinnerName =
+    p1Won && !p2Won ? player1Name : p2Won && !p1Won ? player2Name : null;
+  text.innerHTML = roundWinnerName
+    ? `${roundWinnerName} WINS ROUND ${currentRound}!`
+    : `ROUND ${currentRound} DRAW!`;
+
+  // Check if match is over
+  if (p1RoundWins >= 2 || p2RoundWins >= 2) {
+    const matchWinnerRole = p1RoundWins >= 2 ? "p1" : "p2";
+    const matchLoserRole = matchWinnerRole === "p1" ? "p2" : "p1";
+    const matchWinnerName =
+      matchWinnerRole === "p1" ? player1Name : player2Name;
+    const matchLoserName = matchLoserRole === "p1" ? player1Name : player2Name;
+    text.innerHTML = `${matchWinnerName} WINS THE MATCH!`;
+    if (nextRoundText)
+      nextRoundText.innerText = `🏆 +10 pts for ${matchWinnerName}  |  -5 pts for ${matchLoserName}`;
+    if (restartBtn) restartBtn.innerText = "BACK TO MENU";
+    awardPoints(matchWinnerRole, matchLoserRole);
+    sessionStorage.removeItem("inBattle");
+    sessionStorage.removeItem("battleMode");
+    sessionStorage.removeItem("battleRole");
+  } else {
+    if (nextRoundText)
+      nextRoundText.innerText = `Next: Round ${currentRound + 1} of 3`;
+    if (restartBtn) restartBtn.innerText = "NEXT ROUND";
+  }
+
+  screen.style.display = "block";
 }
 
 function winnerCheck({ player1, player2 }) {
-  const screen = document.querySelector("#game-over-screen");
-  const text = document.querySelector("#winner-text");
-  const p1Name = document.getElementById("display-p1-name").innerText;
-  const p2Name = document.getElementById("display-p2-name").innerText;
+  if (roundEnding) return; // Sudah diproses, abaikan panggilan duplikat
+  roundEnding = true;
+  // Hitung round wins
+  if (player1.health <= 0 && player2.health > 0) p2RoundWins++;
+  else if (player2.health <= 0 && player1.health > 0) p1RoundWins++;
+  showRoundResult();
+}
 
-  screen.style.display = "block";
+const fullscreenBtn = document.getElementById("fullscreen-btn");
 
-  if (player1.health === player2.health) {
-    text.innerHTML = "TIE (SERI)";
-  } else if (player1.health > player2.health) {
-    text.innerHTML = p1Name + " WINS!";
-  } else {
-    text.innerHTML = p2Name + " WINS!";
-  }
+if (fullscreenBtn) {
+  fullscreenBtn.addEventListener("click", () => {
+    const elem = document.documentElement; // Mengambil seluruh layar web
+
+    // Cek apakah web sedang dalam mode fullscreen atau tidak
+    if (
+      !document.fullscreenElement &&
+      !document.webkitFullscreenElement &&
+      !document.msFullscreenElement
+    ) {
+      // Request masuk Fullscreen (Mendukung Multi-browser)
+      if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+      } else if (elem.webkitRequestFullscreen) {
+        /* Safari / iOS */
+        elem.webkitRequestFullscreen();
+      } else if (elem.msRequestFullscreen) {
+        /* IE / Edge */
+        elem.msRequestFullscreen();
+      }
+
+      fullscreenBtn.innerText = "Exit Fullscreen";
+      fullscreenBtn.style.border = "1px solid #e74c3c"; // Ubah warna jadi merah saat aktif
+    } else {
+      // Keluar dari mode Fullscreen
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      } else if (document.msExitFullscreen) {
+        document.msExitFullscreen();
+      }
+
+      fullscreenBtn.innerText = "Go Fullscreen";
+      fullscreenBtn.style.border = "1px solid #2980b9"; // Kembalikan ke warna biru
+    }
+  });
 }
